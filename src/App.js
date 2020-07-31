@@ -10,11 +10,16 @@ export default class App extends React.PureComponent<{}, {}> {
     apiToken: undefined,
     refreshToken: undefined,
     matches: [],
-    hasMessages: 2 // 0 for false, 1 for true and 2 for both :O
+    hasMessages: 0 // 0 for false, 1 for true and 2 for both :O
   }
 
   componentDidMount () {
     this.tryToAuth()
+    /* return this.getProfile()
+      .then((res)  => {
+        debugger
+      })
+      */
   }
 
   render () {
@@ -22,7 +27,7 @@ export default class App extends React.PureComponent<{}, {}> {
     if (!apiToken) return this.renderLoggedOut()
     let {matches} = this.state
     return (
-      <div className="App" style={{backgroundColor: '#0022'}}>
+      <div className="App" style={{marginTop: 0, backgroundColor: '#0022'}}>
         {matches.map(this.renderMatch)}
       </div>
     );
@@ -48,18 +53,14 @@ export default class App extends React.PureComponent<{}, {}> {
       * last_activity_date
       * common_friend_count
       * common_like_count
-      
-      // find endpoint for location... maybe show on map?
-      // if only "km away" show circle with that area?
-      // fetch Request URL: https://api.gotinder.com/user/${user.id}?locale=en-AU
-        .then data.distance_mi
-
+      * maybe show on map?
      */
     return (
-      <div key={index} style={{margin: 50, padding: 50, paddingBottom: 20, backgroundColor: 'black'}}>
+      <div key={index} style={{marginTop: 0, margin: 50, padding: 50, paddingBottom: 20, backgroundColor: 'black'}}>
         <img style={{ resizeMode: 'contain', height: 'auto', width: '50%', maxWidth: 400}} src={match.person.photos[0].url} alt='hot grill' />
         <p style={{color: 'white'}}>{match.person.name}</p>
         <p style={{ color: 'white' }}>{Math.floor(match.distance_mi * MILE_CONVERTER_NUMBER)} km</p>
+        <p style={{ color: 'white' }}>{calculateAge(match.birth_date)} år</p>
       </div>
     )
   }
@@ -150,7 +151,7 @@ export default class App extends React.PureComponent<{}, {}> {
   getMatches = (data?: Object) => {  
     let {hasMessages} = this.state
     // max 100 matches / request
-    return fetch(`/matches?locale=en-AU&count=40&message=${hasMessages}&is_tinder_u=false`, {
+    return fetch(`/matches?locale=en-AU&count=30&message=${hasMessages}&is_tinder_u=false&include=distance`, {
       headers: {
         ...defaultHeaders,
         'X-Auth-Token': data?.api_token || localStorage.getItem('tinderApiToken'),
@@ -167,15 +168,14 @@ export default class App extends React.PureComponent<{}, {}> {
     .then((res) => res?.json())
     .then((res) => {
       if (!res?.data) return Promise.reject(new Error('could not get matches'))
+      debugger
       return Promise.all(res.data.matches.map((match) => this.enhanceMatch(match)))    
     })
     .then((enhancedMatches) => {
       enhancedMatches.sort((a, b) => a.distance_mi - b.distance_mi)
       this.setState({ matches: enhancedMatches})
     })
-    .catch((error) => {
-      
-    })
+    .catch((error) => {})
   }
 
   enhanceMatch = (match: Object) => {
@@ -197,13 +197,14 @@ export default class App extends React.PureComponent<{}, {}> {
   }
 
   getProfile = () => {
-    let { apiToken } = this.state
-    fetch('https://api.gotinder.com/v2/profile?locale=en-AU&include=account', {
+    let tinderApiToken = localStorage.getItem('tinderApiToken') || undefined
+
+    return fetch('/profile?locale=en-AU&include=likes%2Cplus_control%2Cproducts%2Cpurchase%2Cuser', {
       headers: {
         ...defaultHeaders,
-        'X-Auth-Token': apiToken,
+        'X-Auth-Token': tinderApiToken,
       },
-      method: 'post'
+      method: 'GET'
     })
       .then((res) => res.json())
   }
@@ -249,4 +250,11 @@ const defaultHeaders = {
     'Content-Type': 'application/json',
     'platform': 'ios',
     'Accept-Language': 'en'
+}
+
+function calculateAge(birthday) { // birthday is a date
+  debugger
+  var ageDifMs = Date.now() - new Date(birthday).getTime();
+  var ageDate = new Date(ageDifMs); // miliseconds from epoch
+  return Math.abs(ageDate.getUTCFullYear() - 1970);
 }
