@@ -10,6 +10,7 @@ export default class App extends React.PureComponent<{}, {}> {
     apiToken: undefined,
     refreshToken: undefined,
     matches: [],
+    nextPageToken: undefined,
     hasMessages: 0 // 0 for false, 1 for true and 2 for both :O
   }
 
@@ -57,8 +58,8 @@ export default class App extends React.PureComponent<{}, {}> {
      */
     return (
       <div key={index} style={{marginTop: 0, margin: 50, padding: 50, paddingBottom: 20, backgroundColor: 'black'}}>
-        <img style={{ resizeMode: 'contain', height: 'auto', width: '50%', maxWidth: 400}} src={match.person.photos[0].url} alt='hot grill' />
-        <p style={{color: 'white'}}>{match.person.name}</p>
+        <img style={{ borderRadius: 10, resizeMode: 'contain', height: 'auto', width: '50%', maxWidth: 400}} src={match?.person?.photos[0]?.url} alt='hot grill' />
+        <p style={{color: 'white', fontSize: 20, fontWeight: '800'}}>{match.person.name}</p>
         <p style={{ color: 'white' }}>{Math.floor(match.distance_mi * MILE_CONVERTER_NUMBER)} km</p>
         <p style={{ color: 'white' }}>{calculateAge(match.birth_date)} år</p>
       </div>
@@ -107,6 +108,8 @@ export default class App extends React.PureComponent<{}, {}> {
       })
       return Promise.resolve()
         .then(this.getMatches())
+        .then(() => delay(10000))
+        .then(() => this.getMatches(this.state.nextPageToken))
     }
     return Promise.reject(new Error('cant auth'))
   }
@@ -148,31 +151,38 @@ export default class App extends React.PureComponent<{}, {}> {
       })
   }
 
-  getMatches = (data?: Object) => {  
+  getMatches = (page_token?: string) => {  
     let {hasMessages} = this.state
     // max 100 matches / request
-    return fetch(`/matches?locale=en-AU&count=30&message=${hasMessages}&is_tinder_u=false&include=distance`, {
+    let baseUrl = `/matches?locale=en-AU&count=25&message=${hasMessages}&is_tinder_u=false`
+    console.warn(page_token)
+    let url = page_token ? `${baseUrl}&page_token=${page_token}` : baseUrl
+    return fetch(url, {
       headers: {
         ...defaultHeaders,
-        'X-Auth-Token': data?.api_token || localStorage.getItem('tinderApiToken'),
+        'X-Auth-Token': localStorage.getItem('tinderApiToken'),
       },
       method: 'GET',
     })
     .then((res) => {
       if (res.statusText === 'Unauthorized') {
         return this.refreshToken()
-          .this.getMatches()
+          .then(() => this.getMatches())
       }
       return res
     })
     .then((res) => res?.json())
     .then((res) => {
       if (!res?.data) return Promise.reject(new Error('could not get matches'))
+      this.setState({nextPageToken: res.data.next_page_token})
       debugger
       return Promise.all(res.data.matches.map((match) => this.enhanceMatch(match)))    
     })
     .then((enhancedMatches) => {
+      let {matches} = this.state
+      enhancedMatches = [...matches, ...enhancedMatches]
       enhancedMatches.sort((a, b) => a.distance_mi - b.distance_mi)
+
       this.setState({ matches: enhancedMatches})
     })
     .catch((error) => {})
@@ -189,6 +199,9 @@ export default class App extends React.PureComponent<{}, {}> {
       method: 'GET'
     })
     .then((res) => res.json())
+    /* .then((res) => {
+      return delay(500)
+    })*/
       .then((res) => res.results)
     .then((res) => ({...match, ...res}))
     .catch((res) => {
@@ -253,8 +266,13 @@ const defaultHeaders = {
 }
 
 function calculateAge(birthday) { // birthday is a date
-  debugger
   var ageDifMs = Date.now() - new Date(birthday).getTime();
   var ageDate = new Date(ageDifMs); // miliseconds from epoch
   return Math.abs(ageDate.getUTCFullYear() - 1970);
+}
+
+function delay(time) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, time)
+  });
 }
