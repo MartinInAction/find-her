@@ -9,8 +9,8 @@ export default class App extends React.PureComponent<{}, {}> {
   }
 
   componentDidMount () {
-    this.authorize('EAAGm0PX4ZCpsBAEUCXnnZB6qIrjMRBdbiKTEYbo1QpaDRfyF5rIn5A9RK47UWSlAJesIZCJyfdsW7dHwrCkjZBzb1WdPLEcI1VhjSD3a3BWKwOsI7YgguYdTQszNkShIJx0FMHpeT7GhFoTaPYJrSL319PI0mKrcJH5Fik2OlFcXB0WBq6oBHa2MCUVGkVUZD', '10163192507730045')
-      .then((data) => this.getMatches(data))
+    /* this.authorize('EAAGm0PX4ZCpsBAEUCXnnZB6qIrjMRBdbiKTEYbo1QpaDRfyF5rIn5A9RK47UWSlAJesIZCJyfdsW7dHwrCkjZBzb1WdPLEcI1VhjSD3a3BWKwOsI7YgguYdTQszNkShIJx0FMHpeT7GhFoTaPYJrSL319PI0mKrcJH5Fik2OlFcXB0WBq6oBHa2MCUVGkVUZD', '10163192507730045')
+      .then((data) => this.getMatches(data))*/
   }
 
   render () {
@@ -115,12 +115,7 @@ export default class App extends React.PureComponent<{}, {}> {
       })
   }
 
-
 }
-
-
-
-
 
 const defaultHeaders = {
     'User-Agent': 'Tinder/7.5.3 (iPhone; iOS 10.3.2; Scale/2.00)',

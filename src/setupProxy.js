@@ -14,11 +14,4 @@ module.exports = function (app) {
             changeOrigin: true,
         })
     );
-    app.use(
-        '/generate-token',
-        createProxyMiddleware({
-            target: 'https://localhost:3001/',
-            changeOrigin: true,
-        })
-    );
 };

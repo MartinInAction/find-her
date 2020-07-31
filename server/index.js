@@ -22,8 +22,6 @@ app.post('/generate-token', async (req, res) => {
         })
 })
 
-
-
 app.post('/auth/login/facebook', (req, res) => {
     res.setHeader('User-Agent', 'Tinder/7.5.3 (iPhone; iOS 10.3.2; Scale/2.00)');
     res.setHeader('Accept', 'application/json');
