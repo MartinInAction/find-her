@@ -4,11 +4,13 @@ import './App.css';
 // change this to your own for now
 // then maybe use https://www.npmjs.com/package/get-facebook-id ????
 const FACEBOOK_ID = '10163192507730045'
+const MILE_CONVERTER_NUMBER = 1.609344
 export default class App extends React.PureComponent<{}, {}> { 
   state = {
     apiToken: undefined,
     refreshToken: undefined,
-    matches: []
+    matches: [],
+    hasMessages: 2 // 0 for false, 1 for true and 2 for both :O
   }
 
   componentDidMount () {
@@ -20,7 +22,7 @@ export default class App extends React.PureComponent<{}, {}> {
     if (!apiToken) return this.renderLoggedOut()
     let {matches} = this.state
     return (
-      <div className="App">
+      <div className="App" style={{backgroundColor: '#0022'}}>
         {matches.map(this.renderMatch)}
       </div>
     );
@@ -32,6 +34,32 @@ export default class App extends React.PureComponent<{}, {}> {
         <input id='emailInput' placeholder='email' type='email' style={{marginTop: 20}} />
         <input id='passInput' placeholder='password' type='password' style={{marginTop: 20}} />
         <input type='submit' style={{ marginTop: 20 }} value='Sign in' onClick={this.onSignIn} />
+      </div>
+    )
+  }
+
+  renderMatch = (match: Object, index: number) => {
+    /**
+     * TODO
+     * seen: match_seen: true // can see if match is opened
+     * 
+     * sort on :
+      * birth_date,
+      * last_activity_date
+      * common_friend_count
+      * common_like_count
+      
+      // find endpoint for location... maybe show on map?
+      // if only "km away" show circle with that area?
+      // fetch Request URL: https://api.gotinder.com/user/${user.id}?locale=en-AU
+        .then data.distance_mi
+
+     */
+    return (
+      <div key={index} style={{margin: 50, padding: 50, paddingBottom: 20, backgroundColor: 'black'}}>
+        <img style={{ resizeMode: 'contain', height: 'auto', width: '50%', maxWidth: 400}} src={match.person.photos[0].url} alt='hot grill' />
+        <p style={{color: 'white'}}>{match.person.name}</p>
+        <p style={{ color: 'white' }}>{Math.floor(match.distance_mi * MILE_CONVERTER_NUMBER)} km</p>
       </div>
     )
   }
@@ -50,36 +78,14 @@ export default class App extends React.PureComponent<{}, {}> {
         pass
       })
     })
-    .then((res) => res.json())
-    .then((token) => {
-      return this.authorize(token, FACEBOOK_ID) // EAAGm0PX4ZCpsBAEUCXnnZB6qIrjMRBdbiKTEYbo1QpaDRfyF5rIn5A9RK47UWSlAJesIZCJyfdsW7dHwrCkjZBzb1WdPLEcI1VhjSD3a3BWKwOsI7YgguYdTQszNkShIJx0FMHpeT7GhFoTaPYJrSL319PI0mKrcJH5Fik2OlFcXB0WBq6oBHa2MCUVGkVUZD
-    })
-    .then((data) => this.getMatches(data))
-    .catch((err) => {})
+      .then((res) => res.json())
+      .then((token) => {
+        return this.authorize(token, FACEBOOK_ID) // EAAGm0PX4ZCpsBAEUCXnnZB6qIrjMRBdbiKTEYbo1QpaDRfyF5rIn5A9RK47UWSlAJesIZCJyfdsW7dHwrCkjZBzb1WdPLEcI1VhjSD3a3BWKwOsI7YgguYdTQszNkShIJx0FMHpeT7GhFoTaPYJrSL319PI0mKrcJH5Fik2OlFcXB0WBq6oBHa2MCUVGkVUZD
+      })
+      .then((data) => this.getMatches())
+      .catch((err) => { })
   }
 
-  renderMatch = (match: Object, index: number) => {
-    debugger
-    /**
-     * TODO
-     * seen: match_seen: true // can see if match is opened
-     * 
-     * sort on :
-      * birth_date,
-      * last_activity_date
-      * common_friend_count
-      * common_like_count
-      
-      // find endpoint for location... maybe show on map?
-      // if only "km away" show circle with that area?
-     */
-    return (
-      <div key={index} style={{borderWidth: 2, borderColor: 'red'}}>
-        <img style={{ resizeMode: 'contain', height: 'auto', width: 200, margin: 50}} src={match.person.photos[0].url} alt='hot grill' />
-        <p>{match.person.name}</p>
-      </div>
-    )
-  }
 
   hasAuth = () => {
     let tinderApiToken = localStorage.getItem('tinderApiToken') || undefined
@@ -142,7 +148,9 @@ export default class App extends React.PureComponent<{}, {}> {
   }
 
   getMatches = (data?: Object) => {  
-    return fetch(`/matches?locale=en-AU&count=100&message=1&is_tinder_u=false`, {
+    let {hasMessages} = this.state
+    // max 100 matches / request
+    return fetch(`/matches?locale=en-AU&count=40&message=${hasMessages}&is_tinder_u=false`, {
       headers: {
         ...defaultHeaders,
         'X-Auth-Token': data?.api_token || localStorage.getItem('tinderApiToken'),
@@ -159,11 +167,45 @@ export default class App extends React.PureComponent<{}, {}> {
     .then((res) => res?.json())
     .then((res) => {
       if (!res?.data) return Promise.reject(new Error('could not get matches'))
-      this.setState({ matches: res.data.matches })
+      return Promise.all(res.data.matches.map((match) => this.enhanceMatch(match)))    
+    })
+    .then((enhancedMatches) => {
+      enhancedMatches.sort((a, b) => a.distance_mi - b.distance_mi)
+      this.setState({ matches: enhancedMatches})
     })
     .catch((error) => {
       
     })
+  }
+
+  enhanceMatch = (match: Object) => {
+    let {apiToken} = this.state
+    return fetch(`/user/${match.person._id}`, {
+      // 5e1777f2890f930100e04e3c
+      headers: {
+        ...defaultHeaders,
+        'X-Auth-Token': apiToken,
+      },
+      method: 'GET'
+    })
+    .then((res) => res.json())
+      .then((res) => res.results)
+    .then((res) => ({...match, ...res}))
+    .catch((res) => {
+      debugger
+    })
+  }
+
+  getProfile = () => {
+    let { apiToken } = this.state
+    fetch('https://api.gotinder.com/v2/profile?locale=en-AU&include=account', {
+      headers: {
+        ...defaultHeaders,
+        'X-Auth-Token': apiToken,
+      },
+      method: 'post'
+    })
+      .then((res) => res.json())
   }
 
   refreshToken = () => {
