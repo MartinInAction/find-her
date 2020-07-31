@@ -59,9 +59,22 @@ export default class App extends React.PureComponent<{}, {}> {
   }
 
   renderMatch = (match: Object, index: number) => {
+    // debugger
+    /**
+     * TODO
+     * seen: match_seen: true // can see if match is opened
+     * 
+     * sort on :
+      * birth_date,
+      * last_activity_date
+      * common_friend_count
+      * common_like_count
+      * // fetch /recs/core for location?
+
+     */
     return (
       <div key={index} style={{borderWidth: 2, borderColor: 'red'}}>
-        <img style={{height: 200, width: 200, margin: 50}} src={match.person.photos[0].url} alt='hot grill' />
+        <img style={{ resizeMode: 'contain', height: 'auto', width: 200, margin: 50}} src={match.person.photos[0].url} alt='hot grill' />
         <p>{match.person.name}</p>
       </div>
     )
