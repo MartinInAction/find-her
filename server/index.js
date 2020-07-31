@@ -55,6 +55,8 @@ app.use('/generate-token', createProxyMiddleware(localProxyOptions));
 
 app.use('/auth/login/facebook', createProxyMiddleware(tinderProxyOptions));
 
+app.use('/auth', createProxyMiddleware(tinderProxyOptions));
+
 app.use('/matches', createProxyMiddleware(tinderProxyOptions));
 
 
