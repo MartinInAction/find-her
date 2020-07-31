@@ -1,17 +1,16 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 export default class App extends React.PureComponent<{}, {}> { 
   state = {
-    apiToken: '',
-    refreshToken: '',
+    apiToken: undefined,
+    refreshToken: undefined,
     matches: []
   }
 
   componentDidMount () {
-    getMatches(undefined)
-      .then(({ data }) => {
+    /* 
+      .then(({data}) => {
         this.setState({ matches: data.matches })
       })
     let facebookId = '10163192507730045'
@@ -35,14 +34,59 @@ export default class App extends React.PureComponent<{}, {}> {
         })
     })
     .catch((error) => alert(`Error code ${error}`))
+    */
   }
   render () {
+    let {apiToken} = this.state
+    if (!apiToken) return this.renderLoggedOut()
     let {matches} = this.state
     return (
       <div className="App">
         {matches.map(this.renderMatch)}
       </div>
     );
+  }
+
+  renderLoggedOut = () =>  {
+    return (
+      <div style={{ flex: 1, marginLeft: 20, display: 'flex', flexDirection: 'column', maxWidth: 400, justifyContent: 'center', alignSelf: 'center'}}>
+        <input id='emailInput' placeholder='email' type='email' style={{marginTop: 20}} />
+        <input id='passInput' placeholder='password' type='password' style={{marginTop: 20}} />
+        <input type='submit' style={{ marginTop: 20 }} value='Sign in' onClick={this.onSignIn} />
+      </div>
+    )
+  }
+
+  onSignIn = () => {
+    let email = document.getElementById('emailInput').value
+    let pass = document.getElementById('passInput').value
+    return fetch('/generate-token', {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        pass
+      })
+    })
+    .then((res) => {
+      debugger
+      return res
+    })
+    .then((token) => authorize(token, '10163192507730045'))
+    .then((res) => {
+      let { data } = res
+      this.setState({
+        apiToken: data.api_token,
+        refreshToken: data.refresh_token,
+        tinderId: data._id
+      })
+      return data
+    })
+    .then((data) => getMatches(data))
+    .catch((err) => {})
   }
 
   renderMatch = (match: Object) => {
@@ -59,7 +103,7 @@ export default class App extends React.PureComponent<{}, {}> {
 const getMatches = (data) => {
   return fetch(`/matches?locale=en-AU&count=100&message=1&is_tinder_u=false`, {
     headers: {
-      ...defaultOptions.headers,
+      ...defaultHeaders,
       'X-Auth-Token': data?.api_token || '63292fd1-1a70-4cee-b1c2-29713dce0272',
     },
     method: 'GET',
@@ -72,7 +116,9 @@ const getMatches = (data) => {
 
 const authorize = (token: string, facebook_id: string) => {
   return fetch(`/auth/login/facebook`, {
-    ...defaultOptions,
+    headers: {
+      ...defaultHeaders
+    },
     method: 'POST',
     body: JSON.stringify({
       token,
@@ -90,12 +136,10 @@ const authorize = (token: string, facebook_id: string) => {
 }
 
 
-const defaultOptions = {
-  headers: {
+const defaultHeaders = {
     'User-Agent': 'Tinder/7.5.3 (iPhone; iOS 10.3.2; Scale/2.00)',
     'Accept': 'application/json',
     'Content-Type': 'application/json',
     'platform': 'ios',
     'Accept-Language': 'en'
-  }
 }
