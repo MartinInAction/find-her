@@ -22,14 +22,7 @@ app.post('/generate-token', async (req, res) => {
         })
 })
 
-app.post('/bucket', (req, res) => {
-    res.setHeader('User-Agent', 'Tinder/7.5.3 (iPhone; iOS 10.3.2; Scale/2.00)');
-    res.setHeader('Accept', 'application/json');
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('platform', 'ios');
-    res.setHeader('Accept-Language', 'en');
-    generateAccessToken()
-})
+
 
 app.post('/auth/login/facebook', (req, res) => {
     res.setHeader('User-Agent', 'Tinder/7.5.3 (iPhone; iOS 10.3.2; Scale/2.00)');
@@ -54,7 +47,7 @@ const tinderProxyOptions = {
 }
 
 const localProxyOptions = {
-    target: 'https://localhost:3001/', // target host
+    target: 'http://localhost:3001/', // target host
     changeOrigin: true, // needed for virtual hosted sites
     ws: true, // proxy websockets
 }
