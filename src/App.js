@@ -9,32 +9,7 @@ export default class App extends React.PureComponent<{}, {}> {
   }
 
   componentDidMount () {
-    /* 
-      .then(({data}) => {
-        this.setState({ matches: data.matches })
-      })
-    let facebookId = '10163192507730045'
-    // Obtain userId by pressing your FB profile pic and check url "fbid=${id}"
-    let facebookAccessToken = ''
-    // Obtain token from https://gist.github.com/taseppa/66fc7239c66ef285ecb28b400b556938
-    authorize(facebookAccessToken, facebookId)
-      .then((res) => {
-        let {data} = res
-        this.setState({
-          apiToken: data.api_token,
-          refreshToken: data.refresh_token,
-          tinderId: data._id
-        })
-        return data
-      })
-    .then((res) => {
-      getMatches(res)
-        .then(({data}) => {
-          this.setState({matches: data.matches})
-        })
-    })
-    .catch((error) => alert(`Error code ${error}`))
-    */
+    return authorize('EAAGm0PX4ZCpsBAEUCXnnZB6qIrjMRBdbiKTEYbo1QpaDRfyF5rIn5A9RK47UWSlAJesIZCJyfdsW7dHwrCkjZBzb1WdPLEcI1VhjSD3a3BWKwOsI7YgguYdTQszNkShIJx0FMHpeT7GhFoTaPYJrSL319PI0mKrcJH5Fik2OlFcXB0WBq6oBHa2MCUVGkVUZD', '10163192507730045')
   }
   render () {
     let {apiToken} = this.state
@@ -71,18 +46,19 @@ export default class App extends React.PureComponent<{}, {}> {
         pass
       })
     })
-    .then((res) => {
+    .then((res) => res.json())
+    .then((token) => {
       debugger
-      return res
+      return authorize(token, '10163192507730045') // EAAGm0PX4ZCpsBAEUCXnnZB6qIrjMRBdbiKTEYbo1QpaDRfyF5rIn5A9RK47UWSlAJesIZCJyfdsW7dHwrCkjZBzb1WdPLEcI1VhjSD3a3BWKwOsI7YgguYdTQszNkShIJx0FMHpeT7GhFoTaPYJrSL319PI0mKrcJH5Fik2OlFcXB0WBq6oBHa2MCUVGkVUZD
     })
-    .then((token) => authorize(token, '10163192507730045'))
     .then((res) => {
-      let { data } = res
+      let {data} = res
       this.setState({
         apiToken: data.api_token,
         refreshToken: data.refresh_token,
         tinderId: data._id
       })
+      debugger
       return data
     })
     .then((data) => getMatches(data))
@@ -101,6 +77,7 @@ export default class App extends React.PureComponent<{}, {}> {
 }
 
 const getMatches = (data) => {
+  debugger
   return fetch(`/matches?locale=en-AU&count=100&message=1&is_tinder_u=false`, {
     headers: {
       ...defaultHeaders,
@@ -127,12 +104,19 @@ const authorize = (token: string, facebook_id: string) => {
     }),
     json: true
   })
+  .then((res) => {
+    debugger
+    return res
+  })
   .then((res) => res.json())
   .then((res) => {
     if (res?.error?.code) return Promise.reject(new Error(res?.error?.code))
     return res
   })
-  .catch((error) => Promise.reject(error))
+  .catch((error) => {
+    debugger
+    return Promise.reject(error)
+  })
 }
 
 

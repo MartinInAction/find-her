@@ -18,13 +18,12 @@ async function generateAccessToken({ emailAddress, password }) {
     console.log('Inputing pass')
     await page.click(PASSWORD_ID);
     await page.keyboard.type(password);
+    console.log('Clicked login')
     await Promise.all([
         page.waitForNavigation(),
         page.click(LOGIN_ID),
     ]);
-    console.log('Clicked login')
-
-    console.log('waiting for next page');
+    console.log('checking 2-factor auth');
     
     await delay(3000);
 

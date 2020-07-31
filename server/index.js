@@ -11,18 +11,15 @@ app.use(pino);
 
 app.post('/generate-token', async (req, res) => {
     let {body} = req
-    new Promise((resolutionFunc, rejectionFunc) => {
-        generateAccessToken({emailAddress: body.email, password: body.pass})
-            .then((res) => {
-                console.log(res)
-                console.log('DONE')
-                return resolutionFunc(res)
-            })
-            .catch((err) => {
-                console.log(err)
-                return rejectionFunc(err)
-            })
-    }); 
+    return generateAccessToken({emailAddress: body.email, password: body.pass})
+        .then((response) => {
+            console.log(res)
+            return res.json(response)
+        })
+        .catch((err) => {
+            console.log(err)
+            return res.status(401).end()
+        })
 })
 
 app.post('/bucket', (req, res) => {
@@ -62,10 +59,12 @@ const localProxyOptions = {
     ws: true, // proxy websockets
 }
 
-app.use('/auth/login/facebook', createProxyMiddleware(tinderProxyOptions));
-app.use('/matches', createProxyMiddleware(tinderProxyOptions));
+
 app.use('/generate-token', createProxyMiddleware(localProxyOptions));
 
+app.use('/auth/login/facebook', createProxyMiddleware(tinderProxyOptions));
+
+app.use('/matches', createProxyMiddleware(tinderProxyOptions));
 
 
 app.listen(3001, () =>
