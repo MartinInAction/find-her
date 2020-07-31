@@ -59,7 +59,7 @@ export default class App extends React.PureComponent<{}, {}> {
   }
 
   renderMatch = (match: Object, index: number) => {
-    // debugger
+    debugger
     /**
      * TODO
      * seen: match_seen: true // can see if match is opened
@@ -69,8 +69,9 @@ export default class App extends React.PureComponent<{}, {}> {
       * last_activity_date
       * common_friend_count
       * common_like_count
-      * // fetch /recs/core for location?
-
+      
+      // find endpoint for location... maybe show on map?
+      // if only "km away" show circle with that area?
      */
     return (
       <div key={index} style={{borderWidth: 2, borderColor: 'red'}}>
