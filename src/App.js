@@ -111,6 +111,7 @@ export default class App extends React.PureComponent<{}, {}> {
       return Promise.resolve()
         .then(this.getMatches())
         /* .then(() => delay(10000))
+        .then(() => this.getMatches(this.state.nextPageToken)) */
     }
     return Promise.reject(new Error('cant auth'))
   }
