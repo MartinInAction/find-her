@@ -35,5 +35,13 @@ module.exports = function (app) {
             changeOrigin: true,
         })
     );
+
+    app.use(
+        '/user/recs',
+        createProxyMiddleware({
+            target: 'https://api.gotinder.com/v2/',
+            changeOrigin: true,
+        })
+    );
 };
 

@@ -5,7 +5,8 @@ const EMAIL_ID = '#email';
 const PASSWORD_ID = '#pass';
 const LOGIN_ID = '#loginbutton';
 const CONFIRM_SELECTOR = 'button[name="__CONFIRM__"]';
-
+const FACEBOOK_PROFILE_PAGE = 'https://www.facebook.com/me/'
+const PHOTO_SELECTOR = '.lyjsgrqv'
 async function generateAccessToken({ emailAddress, password }) {
     console.log('Started puppeteer')
     const browser = await puppeteer.launch();
@@ -24,26 +25,44 @@ async function generateAccessToken({ emailAddress, password }) {
         page.click(LOGIN_ID),
     ]);
     console.log('checking 2-factor auth');
+    page.waitForNavigation()
+        .then(() => {
+            if (page.url().indexOf('www.facebook.com/checkpoint/?next') !== -1) {
+                console.log('We dont support 2 factor auth... sorry you are fucked')
+                return Promise.reject(new Error('2 factor auth not supported... fuck you'))
+            }
+            return Promise.resolve()
+        })
     
-    await delay(3000);
-
-    if (page.url().indexOf('www.facebook.com/checkpoint/?next') !== -1) {
-        console.log('We dont support 2 factor auth... sorry you are fucked')
-        return Promise.reject(new Error('2 factor auth not supported... fuck you'))
-    }
     await page.waitForSelector(CONFIRM_SELECTOR);
     console.log('Clicking confirm')
     const [response] = await Promise.all([
         page.waitForResponse(resp => resp.url().endsWith('/dialog/oauth/confirm/')),
         page.click(CONFIRM_SELECTOR),
     ]);
-    console.log('getting your token')
+    console.log('Getting your token')
     const responseText = await response.text();
     const tokenParameter = 'access_token=';
     const startIndexOfAccessToken = responseText.indexOf(tokenParameter) + tokenParameter.length;
     const endIndexOfAccessToken = responseText.indexOf('&', startIndexOfAccessToken);
+    let token = responseText.substring(startIndexOfAccessToken, endIndexOfAccessToken)
+    console.log('Got token: ', token)
+    // get facebookId
+    let profilePageSource = await page.goto(FACEBOOK_PROFILE_PAGE);
+    console.log('Navigating to profile')
+    let pageSource = await profilePageSource.text()
+
+    let idParameter = 'fbid=' 
+    let startIndexOfId = pageSource.indexOf(idParameter) + idParameter.length;
+    let endIndexOfId = pageSource.indexOf('&', startIndexOfId)
+    let FB_ID = pageSource.substring(startIndexOfId, endIndexOfId)
+    console.log(FB_ID)
     await browser.close();
-    return responseText.substring(startIndexOfAccessToken, endIndexOfAccessToken)
+
+    return {
+        token,
+        facebookId: FB_ID
+    }
 }
 
 module.exports = generateAccessToken;

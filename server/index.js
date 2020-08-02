@@ -2,7 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const pino = require('express-pino-logger')();
 const app = express();
-const {createProxyMiddleware} = require('http-proxy-middleware')
 const generateAccessToken = require('./generateToken')
 
 app.use(bodyParser.urlencoded({extended: true}));
@@ -12,13 +11,10 @@ app.use(pino);
 app.post('/generate-token', async (req, res) => {
     let {body} = req
     return generateAccessToken({emailAddress: body.email, password: body.pass})
-        .then((response) => {
-            console.log(res)
-            return res.json(response)
-        })
+        .then((response) => res.json(response))
         .catch((err) => {
             console.log(err)
-            return res.status(401).end()
+            return res.status(500).end()
         })
 })
 

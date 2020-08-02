@@ -3,7 +3,6 @@ import './App.css';
 
 // change this to your own for now
 // then maybe use https://www.npmjs.com/package/get-facebook-id ????
-const FACEBOOK_ID = '10163192507730045'
 const MILE_CONVERTER_NUMBER = 1.609344
 export default class App extends React.PureComponent<{}, {}> { 
   state = {
@@ -11,7 +10,7 @@ export default class App extends React.PureComponent<{}, {}> {
     refreshToken: undefined,
     matches: [],
     nextPageToken: undefined,
-    hasMessages: 0 // 0 for false, 1 for true and 2 for both :O
+    hasMessages: 2 // 0 for false, 1 for true and 2 for both :O
   }
 
   componentDidMount () {
@@ -19,9 +18,10 @@ export default class App extends React.PureComponent<{}, {}> {
     /* return this.getProfile()
       .then((res)  => {
         debugger
-      })
-      */
-  }
+      })*/
+    // this.getGirls()
+
+  } 
 
   render () {
     let {apiToken} = this.state
@@ -45,11 +45,12 @@ export default class App extends React.PureComponent<{}, {}> {
   }
 
   renderMatch = (match: Object, index: number) => {
+    // debugger
     /**
      * TODO
      * seen: match_seen: true // can see if match is opened
      * 
-     * sort on :
+      * sort on :
       * birth_date,
       * last_activity_date
       * common_friend_count
@@ -81,8 +82,9 @@ export default class App extends React.PureComponent<{}, {}> {
       })
     })
       .then((res) => res.json())
-      .then((token) => {
-        return this.authorize(token, FACEBOOK_ID) // EAAGm0PX4ZCpsBAEUCXnnZB6qIrjMRBdbiKTEYbo1QpaDRfyF5rIn5A9RK47UWSlAJesIZCJyfdsW7dHwrCkjZBzb1WdPLEcI1VhjSD3a3BWKwOsI7YgguYdTQszNkShIJx0FMHpeT7GhFoTaPYJrSL319PI0mKrcJH5Fik2OlFcXB0WBq6oBHa2MCUVGkVUZD
+      .then((data) => {
+        let {token, facebookId} = data
+        return this.authorize(token, facebookId) // EAAGm0PX4ZCpsBAEUCXnnZB6qIrjMRBdbiKTEYbo1QpaDRfyF5rIn5A9RK47UWSlAJesIZCJyfdsW7dHwrCkjZBzb1WdPLEcI1VhjSD3a3BWKwOsI7YgguYdTQszNkShIJx0FMHpeT7GhFoTaPYJrSL319PI0mKrcJH5Fik2OlFcXB0WBq6oBHa2MCUVGkVUZD
       })
       .then((data) => this.getMatches())
       .catch((err) => { })
@@ -108,8 +110,7 @@ export default class App extends React.PureComponent<{}, {}> {
       })
       return Promise.resolve()
         .then(this.getMatches())
-        .then(() => delay(10000))
-        .then(() => this.getMatches(this.state.nextPageToken))
+        /* .then(() => delay(10000))
     }
     return Promise.reject(new Error('cant auth'))
   }
@@ -174,18 +175,21 @@ export default class App extends React.PureComponent<{}, {}> {
     .then((res) => res?.json())
     .then((res) => {
       if (!res?.data) return Promise.reject(new Error('could not get matches'))
-      this.setState({nextPageToken: res.data.next_page_token})
-      debugger
-      return Promise.all(res.data.matches.map((match) => this.enhanceMatch(match)))    
+      this.setState({nextPageToken: res?.data?.next_page_token})
+      return Promise.all(res.data.matches.map((match) => this.enhanceMatch(match)))
+      // return res.data.matches
     })
     .then((enhancedMatches) => {
       let {matches} = this.state
       enhancedMatches = [...matches, ...enhancedMatches]
+      debugger
       enhancedMatches.sort((a, b) => a.distance_mi - b.distance_mi)
 
       this.setState({ matches: enhancedMatches})
     })
-    .catch((error) => {})
+    .catch((error) => {
+      debugger
+    })
   }
 
   enhanceMatch = (match: Object) => {
@@ -211,7 +215,6 @@ export default class App extends React.PureComponent<{}, {}> {
 
   getProfile = () => {
     let tinderApiToken = localStorage.getItem('tinderApiToken') || undefined
-
     return fetch('/profile?locale=en-AU&include=likes%2Cplus_control%2Cproducts%2Cpurchase%2Cuser', {
       headers: {
         ...defaultHeaders,
@@ -220,6 +223,24 @@ export default class App extends React.PureComponent<{}, {}> {
       method: 'GET'
     })
       .then((res) => res.json())
+  }
+
+  getGirls = () => {
+    let tinderApiToken = localStorage.getItem('tinderApiToken') || undefined
+    return fetch('/user/recs', {
+      headers: {
+        ...defaultHeaders,
+        'X-Auth-Token': tinderApiToken,
+      },
+      method: 'GET'
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        debugger
+      })
+      .catch((err) => {
+        debugger
+      })
   }
 
   refreshToken = () => {
@@ -265,7 +286,7 @@ const defaultHeaders = {
     'Accept-Language': 'en'
 }
 
-function calculateAge(birthday) { // birthday is a date
+function calculateAge(birthday: Date) { // birthday is a date
   var ageDifMs = Date.now() - new Date(birthday).getTime();
   var ageDate = new Date(ageDifMs); // miliseconds from epoch
   return Math.abs(ageDate.getUTCFullYear() - 1970);
