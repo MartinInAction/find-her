@@ -1,5 +1,10 @@
 import React from 'react';
 import './App.css';
+import { Slide } from 'react-slideshow-image';
+import 'react-slideshow-image/dist/styles.css'
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { InputGroup, FormControl, Row, Col, Button } from 'react-bootstrap';
+
 
 // change this to your own for now
 // then maybe use https://www.npmjs.com/package/get-facebook-id ????
@@ -10,7 +15,8 @@ export default class App extends React.PureComponent<{}, {}> {
     refreshToken: undefined,
     matches: [],
     nextPageToken: undefined,
-    hasMessages: 2 // 0 for false, 1 for true and 2 for both :O
+    hasMessages: 2, // 0 for false, 1 for true and 2 for both :O
+    username: undefined
   }
 
   componentDidMount () {
@@ -29,14 +35,24 @@ export default class App extends React.PureComponent<{}, {}> {
     let {matches} = this.state
     return (
       <div className="App" style={{marginTop: 0, backgroundColor: '#0022'}}>
+        {/* <p style={{color: '#fff', fontSize: 20, fontWeight: '800'}}>{this.state.username}</p>*/}
+        <Row>
+          <Col>
+            <Button onClick={this.getMatches} > GET MATCHES</Button>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
         {matches.map(this.renderMatch)}
+          </Col>
+        </Row>
       </div>
     );
   }
 
   renderLoggedOut = () =>  {
     return (
-      <div style={{ flex: 1, marginLeft: 20, display: 'flex', flexDirection: 'column', maxWidth: 400, justifyContent: 'center', alignSelf: 'center'}}>
+      <div style={{flex: 1, marginLeft: 20, display: 'flex', flexDirection: 'column', maxWidth: 400, justifyContent: 'center', alignSelf: 'center'}}>
         <input id='emailInput' placeholder='email' type='email' style={{marginTop: 20}} />
         <input id='passInput' placeholder='password' type='password' style={{marginTop: 20}} />
         <input type='submit' style={{ marginTop: 20 }} value='Sign in' onClick={this.onSignIn} />
@@ -45,7 +61,6 @@ export default class App extends React.PureComponent<{}, {}> {
   }
 
   renderMatch = (match: Object, index: number) => {
-    // debugger
     /**
      * TODO
      * seen: match_seen: true // can see if match is opened
@@ -57,9 +72,13 @@ export default class App extends React.PureComponent<{}, {}> {
       * common_like_count
       * maybe show on map?
      */
+    if (!match.person) return <div/>
     return (
-      <div key={index} style={{marginTop: 0, margin: 50, padding: 50, paddingBottom: 20, backgroundColor: 'black'}}>
-        <img style={{ borderRadius: 10, resizeMode: 'contain', height: 'auto', width: '50%', maxWidth: 400}} src={match?.person?.photos[0]?.url} alt='hot grill' />
+      <div key={index} style={{maxWidth: '50%', marginTop: 0, margin: 50, padding: 50, paddingBottom: 20, backgroundColor: 'black'}}>
+        <Slide autoplay={false}>
+          {match?.person?.photos.map((photo, index) => <img key={index} style={{ borderRadius: 10, resizeMode: 'contain', height: 'auto', width: '50%', maxWidth: 400 }} src={photo?.url} alt='hot grill' />)}
+        </Slide>
+        
         <p style={{color: 'white', fontSize: 20, fontWeight: '800'}}>{match.person.name}</p>
         <p style={{ color: 'white' }}>{Math.floor(match.distance_mi * MILE_CONVERTER_NUMBER)} km</p>
         <p style={{ color: 'white' }}>{calculateAge(match.birth_date)} år</p>
@@ -108,8 +127,7 @@ export default class App extends React.PureComponent<{}, {}> {
         refreshToken: tinderRefreshToken,
         tinderId: tinderId
       })
-      return Promise.resolve()
-        .then(this.getMatches())
+      return this.getProfile()
         /* .then(() => delay(10000))
         .then(() => this.getMatches(this.state.nextPageToken)) */
     }
@@ -148,17 +166,24 @@ export default class App extends React.PureComponent<{}, {}> {
         return res
       })
       .catch((error) => {
-        debugger
         return Promise.reject(error)
       })
   }
 
   getMatches = (page_token?: string) => {  
     let {hasMessages} = this.state
-    // max 100 matches / request
-    let baseUrl = `/matches?locale=en-AU&count=25&message=${hasMessages}&is_tinder_u=false`
+    /* filter on 
+    is_boost_match: false
+    is_experiences_match: false
+    is_fast_match: false
+    is_opener: true
+    is_super_boost_match: false
+    is_super_like: false
+    is_tinder_u: false
+    */
+    let baseUrl = `/matches?&count=25&message=${hasMessages}&distance_mi=1`
     console.warn(page_token)
-    let url = page_token ? `${baseUrl}&page_token=${page_token}` : baseUrl
+    let url = page_token && typeof page_token === 'string' ? `${baseUrl}&page_token=${page_token}` : baseUrl
     return fetch(url, {
       headers: {
         ...defaultHeaders,
@@ -183,7 +208,6 @@ export default class App extends React.PureComponent<{}, {}> {
     .then((enhancedMatches) => {
       let {matches} = this.state
       enhancedMatches = [...matches, ...enhancedMatches]
-      debugger
       enhancedMatches.sort((a, b) => a.distance_mi - b.distance_mi)
 
       this.setState({ matches: enhancedMatches})
@@ -207,7 +231,7 @@ export default class App extends React.PureComponent<{}, {}> {
     /* .then((res) => {
       return delay(500)
     })*/
-      .then((res) => res.results)
+    .then((res) => res.results)
     .then((res) => ({...match, ...res}))
     .catch((res) => {
       debugger
@@ -216,7 +240,7 @@ export default class App extends React.PureComponent<{}, {}> {
 
   getProfile = () => {
     let tinderApiToken = localStorage.getItem('tinderApiToken') || undefined
-    return fetch('/profile?locale=en-AU&include=likes%2Cplus_control%2Cproducts%2Cpurchase%2Cuser', {
+    return fetch('/profile?include=likes%2Cplus_control%2Cproducts%2Cpurchase%2Cuser', {
       headers: {
         ...defaultHeaders,
         'X-Auth-Token': tinderApiToken,
@@ -224,6 +248,7 @@ export default class App extends React.PureComponent<{}, {}> {
       method: 'GET'
     })
       .then((res) => res.json())
+      .then(({data}) => this.setState({username: data.user.username}))
   }
 
   getGirls = () => {
