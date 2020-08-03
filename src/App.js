@@ -1,9 +1,11 @@
 import React from 'react';
 import './App.css';
-import { Slide } from 'react-slideshow-image';
-import 'react-slideshow-image/dist/styles.css'
+import 'swiper/swiper.scss'
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { Swiper, SwiperSlide } from 'swiper/react';
 import { InputGroup, FormControl, Row, Col, Button } from 'react-bootstrap';
+
+
 
 
 // change this to your own for now
@@ -30,22 +32,15 @@ export default class App extends React.PureComponent<{}, {}> {
   } 
 
   render () {
-    let {apiToken} = this.state
+    let {apiToken, matches, username} = this.state
     if (!apiToken) return this.renderLoggedOut()
-    let {matches} = this.state
     return (
       <div className="App" style={{marginTop: 0, backgroundColor: '#0022'}}>
-        {/* <p style={{color: '#fff', fontSize: 20, fontWeight: '800'}}>{this.state.username}</p>*/}
-        <Row>
-          <Col>
-            <Button onClick={this.getMatches} > GET MATCHES</Button>
-          </Col>
-        </Row>
-        <Row>
-          <Col>
-        {matches.map(this.renderMatch)}
-          </Col>
-        </Row>
+        {username ? <p style={{color: '#fff', fontSize: 20, fontWeight: '800'}}>Logged in as: {username}</p> : <div />}
+        <Button onClick={this.getMatches} > GET MATCHES</Button>
+        <div>
+          {matches.map(this.renderMatch)}
+        </div>
       </div>
     );
   }
@@ -75,10 +70,16 @@ export default class App extends React.PureComponent<{}, {}> {
     if (!match.person) return <div/>
     return (
       <div key={index} style={{maxWidth: '50%', marginTop: 0, margin: 50, padding: 50, paddingBottom: 20, backgroundColor: 'black'}}>
-        <Slide autoplay={false}>
-          {match?.person?.photos.map((photo, index) => <img key={index} style={{ borderRadius: 10, resizeMode: 'contain', height: 'auto', width: '50%', maxWidth: 400 }} src={photo?.url} alt='hot grill' />)}
-        </Slide>
-        
+        <Swiper
+          spaceBetween={50}
+          slidesPerView={1} 
+          >
+          {match?.person?.photos.map((photo, index) => {
+            return <SwiperSlide>
+              <img key={index} style={{ borderRadius: 10, resizeMode: 'contain', height: 'auto', width: '50%', maxWidth: 400 }} src={photo?.url} alt='hot grill' />
+            </SwiperSlide>
+          })}
+    </Swiper>        
         <p style={{color: 'white', fontSize: 20, fontWeight: '800'}}>{match.person.name}</p>
         <p style={{ color: 'white' }}>{Math.floor(match.distance_mi * MILE_CONVERTER_NUMBER)} km</p>
         <p style={{ color: 'white' }}>{calculateAge(match.birth_date)} år</p>
@@ -189,32 +190,26 @@ export default class App extends React.PureComponent<{}, {}> {
         ...defaultHeaders,
         'X-Auth-Token': localStorage.getItem('tinderApiToken'),
       },
-      method: 'GET',
+      method: 'GET'
     })
-    .then((res) => {
-      if (res.statusText === 'Unauthorized') {
-        return this.refreshToken()
-          .then(() => this.getMatches())
-      }
-      return res
-    })
-    .then((res) => res?.json())
-    .then((res) => {
-      if (!res?.data) return Promise.reject(new Error('could not get matches'))
-      this.setState({nextPageToken: res?.data?.next_page_token})
-      return Promise.all(res.data.matches.map((match) => this.enhanceMatch(match)))
-      // return res.data.matches
-    })
-    .then((enhancedMatches) => {
-      let {matches} = this.state
-      enhancedMatches = [...matches, ...enhancedMatches]
-      enhancedMatches.sort((a, b) => a.distance_mi - b.distance_mi)
+      .then((res) => res?.json())
+      .then((res) => {
+        if (!res?.data) return Promise.reject(new Error('could not get matches'))
+        this.setState({ nextPageToken: res?.data?.next_page_token })
+        return Promise.all(res.data.matches.map((match) => this.enhanceMatch(match)))
+        // return res.data.matches
+      })
+      .then((enhancedMatches) => {
+        let { matches } = this.state
+        enhancedMatches = [...matches, ...enhancedMatches]
+        enhancedMatches.sort((a, b) => a.distance_mi - b.distance_mi)
 
-      this.setState({ matches: enhancedMatches})
-    })
-    .catch((error) => {
-      debugger
-    })
+        this.setState({ matches: enhancedMatches })
+      })
+      .catch((error) => {
+        debugger
+      })
+
   }
 
   enhanceMatch = (match: Object) => {
@@ -247,6 +242,13 @@ export default class App extends React.PureComponent<{}, {}> {
       },
       method: 'GET'
     })
+      .then((res) => {
+        if (res.statusText === 'Unauthorized') {
+          return this.refreshToken()
+            .then(() => this.getProfile())
+        }
+        return res
+      })
       .then((res) => res.json())
       .then(({data}) => this.setState({username: data.user.username}))
   }
