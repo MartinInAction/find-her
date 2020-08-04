@@ -5,8 +5,8 @@ import 'swiper/components/pagination/pagination.scss';
 import GridGenerator from './components/GridGenerator'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Swiper, SwiperSlide } from 'swiper/react'
-import SwiperCore, { Pagination, Parallax, Virtual} from 'swiper';
-import { InputGroup, FormControl, Row, Col, Button } from 'react-bootstrap';
+import SwiperCore, { Pagination, Virtual} from 'swiper';
+import { InputGroup, FormControl, Row, Button } from 'react-bootstrap';
 SwiperCore.use([Pagination, Virtual]);
 
 
@@ -27,7 +27,6 @@ export default class App extends React.PureComponent<{}, {}> {
 
   componentDidMount () {
     this.tryToAuth()
-      .then(() => this.getMatches())
 
   } 
 
@@ -38,6 +37,7 @@ export default class App extends React.PureComponent<{}, {}> {
       <div className="App" style={{marginTop: 0, backgroundColor: '#0022'}}>
         {username ? <p style={{color: '#fff', fontSize: 20, fontWeight: '800'}}>Logged in as: {username}</p> : <div />}
         <Button variant="primary" onClick={this.getMatches}>{matches.length > 0 ? 'LOAD MORE' : 'LOAD MATCHES'}</Button>
+        {matches.length > 0 ? <p style={{color: '#fff', marginTop: 20}}>Displaying {matches.length} matches</p> : <div />}
         <GridGenerator cols={3}>
             {matches.map(this.renderMatch)}
           </GridGenerator>
@@ -98,8 +98,8 @@ export default class App extends React.PureComponent<{}, {}> {
           slidesPerView={1} 
           >
           {match?.person?.photos.map((photo, index) => {
-            return <SwiperSlide>
-              <img key={index} style={{borderRadius: 10, resizeMode: 'contain', height: 250, width: 'auto', maxWidth: 400 }} src={photo?.url} alt='hot grill' />
+            return <SwiperSlide key={index}>
+              <img style={{borderRadius: 10, resizeMode: 'contain', height: 250, width: 'auto', maxWidth: 400 }} src={photo?.url} alt='hot grill' />
             </SwiperSlide>
           })}
     </Swiper>        
@@ -201,8 +201,8 @@ export default class App extends React.PureComponent<{}, {}> {
       })
   }
 
-  getMatches = (page_token?: string) => {  
-    let {hasMessages} = this.state
+  getMatches = () => {  
+    let { hasMessages, nextPageToken} = this.state
     /* filter on 
     is_boost_match: false
     is_experiences_match: false
@@ -213,8 +213,10 @@ export default class App extends React.PureComponent<{}, {}> {
     is_tinder_u: false
     */
     let baseUrl = `/matches?&count=25&message=${hasMessages}`
-    console.warn(page_token)
-    let url = page_token && typeof page_token === 'string' ? `${baseUrl}&page_token=${page_token}` : baseUrl
+    console.log(nextPageToken)
+
+    let url = !!nextPageToken && typeof nextPageToken === 'string' ? `${baseUrl}&page_token=${nextPageToken}` : baseUrl
+    console.log(url)
     return fetch(url, {
       headers: {
         ...defaultHeaders,
