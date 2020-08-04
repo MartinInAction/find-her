@@ -74,7 +74,7 @@ export default class App extends React.PureComponent<{}, {}> {
               aria-describedby="basic-addon1"
             />
           </InputGroup>
-          <Button variant="primary" style={{ marginTop: 0 }} onClick={this.onSignIn}>SIGN IN</Button>
+            <Button variant="primary" style={{ backgroundColor: 'red', borderColor: 'red', marginTop: 0 }} onClick={this.onSignIn}>SIGN IN</Button>
           </div>
         </div>
       </>
