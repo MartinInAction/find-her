@@ -14,7 +14,7 @@ const ImageGrid = ({images}) => {
       <div className='backgroundGridContainer'>
         {images.map((item, index) => {
             if (index + 1 > nrHorizontalImages * nrVerticalImages) return null
-            return <img src={item.picture.large} key={index} className={'gridImage gridImageAnimation'} alt='person' />
+            return <img src={item.image} key={index} className={'gridImage gridImageAnimation'} alt='person' />
       })}
       </div>
     )

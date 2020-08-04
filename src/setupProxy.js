@@ -42,7 +42,6 @@ module.exports = function (app) {
             changeOrigin: true,
         })
     );
-
     app.use(
         '/user/recs',
         createProxyMiddleware({
@@ -50,5 +49,14 @@ module.exports = function (app) {
             changeOrigin: true,
         })
     );
+    app.use(
+        '/photos/hot-girls/',
+        createProxyMiddleware({
+            target: 'https://www.gettyimages.com/',
+            changeOrigin: true,
+        })
+    );
+
+    
 };
 
