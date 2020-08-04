@@ -1,9 +1,13 @@
 import React from 'react';
 import './App.css';
-import 'swiper/swiper.scss'
+import 'swiper/swiper.scss';
+import 'swiper/components/pagination/pagination.scss';
+import GridGenerator from './components/GridGenerator'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Swiper, SwiperSlide } from 'swiper/react'
+import SwiperCore, { Pagination, Parallax, Virtual} from 'swiper';
 import { InputGroup, FormControl, Row, Col, Button } from 'react-bootstrap';
+SwiperCore.use([Pagination, Virtual]);
 
 
 
@@ -23,11 +27,7 @@ export default class App extends React.PureComponent<{}, {}> {
 
   componentDidMount () {
     this.tryToAuth()
-    /* return this.getProfile()
-      .then((res)  => {
-        debugger
-      })*/
-    // this.getGirls()
+      // .then(() => this.getMatches())
 
   } 
 
@@ -37,10 +37,10 @@ export default class App extends React.PureComponent<{}, {}> {
     return (
       <div className="App" style={{marginTop: 0, backgroundColor: '#0022'}}>
         {username ? <p style={{color: '#fff', fontSize: 20, fontWeight: '800'}}>Logged in as: {username}</p> : <div />}
-        <Button onClick={this.getMatches} > GET MATCHES</Button>
-        <div>
-          {matches.map(this.renderMatch)}
-        </div>
+        <Button onClick={this.getMatches}>{matches.length > 0 ? 'LOAD MORE' : 'LOAD MATCHES'}</Button>
+        <GridGenerator cols={3}>
+            {matches.map(this.renderMatch)}
+          </GridGenerator>
       </div>
     );
   }
@@ -69,17 +69,15 @@ export default class App extends React.PureComponent<{}, {}> {
      */
     if (!match?.person) return <div key={index} />
     return (
-      <div key={index} style={{maxWidth: '50%', marginTop: 0, margin: 50, padding: 50, paddingBottom: 20, backgroundColor: 'black'}}>
+      <div key={index} style={{flex: 1, marginTop: 50}}>
         <Swiper
           pagination
-          navigation
-          scrollbar
-          spaceBetween={50}
+          spaceBetween={1}
           slidesPerView={1} 
           >
           {match?.person?.photos.map((photo, index) => {
             return <SwiperSlide>
-              <img key={index} style={{ borderRadius: 10, resizeMode: 'contain', height: 'auto', width: '50%', maxWidth: 400 }} src={photo?.url} alt='hot grill' />
+              <img key={index} style={{borderRadius: 10, resizeMode: 'contain', height: 250, width: 'auto', maxWidth: 400 }} src={photo?.url} alt='hot grill' />
             </SwiperSlide>
           })}
     </Swiper>        
@@ -141,8 +139,6 @@ export default class App extends React.PureComponent<{}, {}> {
         tinderId: tinderId
       })
       return this.getProfile()
-        /* .then(() => delay(10000))
-        .then(() => this.getMatches(this.state.nextPageToken)) */
     }
     return Promise.reject(new Error('cant auth'))
   }
@@ -194,7 +190,7 @@ export default class App extends React.PureComponent<{}, {}> {
     is_super_like: false
     is_tinder_u: false
     */
-    let baseUrl = `/matches?&count=25&message=${hasMessages}&distance_mi=1`
+    let baseUrl = `/matches?&count=25&message=${hasMessages}`
     console.warn(page_token)
     let url = page_token && typeof page_token === 'string' ? `${baseUrl}&page_token=${page_token}` : baseUrl
     return fetch(url, {
