@@ -7,8 +7,10 @@ const ImageGrid = ({images}) => {
 
     const { height, width } = useWindowDimensions()
 
-    let nrHorizontalImages = Math.floor((width) / 100)
+    let sideMargin = 6
+    let nrHorizontalImages = Math.floor((width) / (100 + sideMargin))
     let nrVerticalImages = Math.floor((height) / 100)
+    let nrImages = nrHorizontalImages * nrVerticalImages
 
     return (
       <div className='backgroundGridContainer'>
