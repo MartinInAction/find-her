@@ -10,6 +10,18 @@
   justify-content: center;
   flex-direction: column;
   margin: 0 auto;
-  padding: 15px 15px 70px 15px;
+  padding: 15px;
   background-color: rgba(0, 0, 0, 0.7);
+}
+
+.redButton {
+  background-color: red;
+  border-color: red;
+}
+
+.loginError {
+  height: 30px;
+  margin-top: 15px;
+  color: red;
+  font-size: 0.9rem;
 }

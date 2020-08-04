@@ -6,7 +6,7 @@ import GridGenerator from './components/GridGenerator'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Swiper, SwiperSlide } from 'swiper/react'
 import SwiperCore, { Pagination, Virtual} from 'swiper';
-import { InputGroup, FormControl, Row, Button } from 'react-bootstrap';
+import { InputGroup, FormControl, Row, Button, Form, Spinner } from 'react-bootstrap';
 import BackgroundGrid from './components/BackgroundGrid';
 SwiperCore.use([Pagination, Virtual]);
 
@@ -20,7 +20,9 @@ const INITIAL_STATE = {
   matches: [],
   nextPageToken: undefined,
   hasMessages: 2, // 0 for false, 1 for true and 2 for both :O
-  username: undefined
+  username: undefined,
+  loginError: undefined,
+  isLoading: false
 }
 
 export default class App extends React.PureComponent<{}, {}> {
@@ -37,8 +39,8 @@ export default class App extends React.PureComponent<{}, {}> {
     return (
       <div style={{marginTop: 0, backgroundColor: '#0022'}}>
         {username ? <p style={{color: '#fff', fontSize: 20, fontWeight: '800'}}>Logged in as: {username}</p> : <div />}
-        <Button variant="primary" onClick={this.getMatches}>{matches.length > 0 ? 'LOAD MORE' : 'LOAD MATCHES'}</Button>
-        <Button variant="warning" onClick={this.logoutUser}>SIGN OUT</Button>
+        <Button variant='primary' onClick={this.getMatches}>{matches.length > 0 ? 'LOAD MORE' : 'LOAD MATCHES'}</Button>
+        <Button variant='primary' style={{ backgroundColor: 'red', borderColor: 'red' }} onClick={this.logoutUser}>SIGN OUT</Button>
         {matches.length > 0 ? <p style={{color: '#fff', marginTop: 20}}>Displaying {matches.length} matches</p> : <div />}
         <GridGenerator cols={3}>
             {matches.map(this.renderMatch)}
@@ -48,38 +50,47 @@ export default class App extends React.PureComponent<{}, {}> {
   }
 
   renderLoggedOut = () =>  {
+    let {isLoading, loginError} = this.state
     return (
       <>
         <BackgroundGrid />
         <div className='loggedOutContainer'>
-          <div className='loggedOutWrapper'>
-          <img src='/findHerLogo.png' />
-          <InputGroup className="mb-3">
-            <InputGroup.Prepend>
-              <InputGroup.Text id="basic-addon1"></InputGroup.Text>
-            </InputGroup.Prepend>
-            <FormControl
-              id='emailInput'
-              type="email" 
-              placeholder="Email"
-              aria-label="Email"
-              aria-describedby="basic-addon1"
-            />
-          </InputGroup>
-          <InputGroup id='email' className="mb-3">
-            <InputGroup.Prepend>
-              <InputGroup.Text id="basic-addon1"></InputGroup.Text>
-            </InputGroup.Prepend>
-            <FormControl
-              id='passInput'
-              type="password" 
-              placeholder="Password"
-              aria-label="Password"
-              aria-describedby="basic-addon1"
-            />
-          </InputGroup>
-            <Button variant="primary" style={{ backgroundColor: 'red', borderColor: 'red', marginTop: 0 }} onClick={this.onSignIn}>SIGN IN</Button>
-          </div>
+            <Form onSubmit={(event) => this.onSignIn(event)} className='loggedOutWrapper'>
+            <img src='/findHerLogo.png' />
+              <InputGroup className='mb-3'>
+                <InputGroup.Prepend>
+                  <InputGroup.Text id='basic-addon1'></InputGroup.Text>
+                </InputGroup.Prepend>
+                <FormControl
+                  id='emailInput'
+                  type='text'
+                  placeholder='Email'
+                  aria-label='Email'
+                  aria-describedby='basic-addon1'
+                />
+              </InputGroup>
+              <InputGroup className='mb-3'>
+                <InputGroup.Prepend>
+                  <InputGroup.Text id='basic-addon1'></InputGroup.Text>
+                </InputGroup.Prepend>
+                <FormControl
+                  id='passInput'
+                  type='password' 
+                  placeholder='Password'
+                  aria-label='Password'
+                  aria-describedby='basic-addon1'
+                />
+              </InputGroup>
+              <Button
+                variant='primary'
+                style={{backgroundColor: 'red', borderColor: 'red', marginTop: 0}}
+                disabled={isLoading}
+                type='submit'
+                >
+                  {isLoading ? <Spinner animation='grow' size='sm' /> : 'SIGN IN'}
+                </Button>
+                {loginError ? <p className='loginError'>Something went wrong...</p> : <p className='loginError'/>}
+            </Form>
         </div>
       </>
     )
@@ -127,9 +138,12 @@ export default class App extends React.PureComponent<{}, {}> {
     </div>
   }
 
-  onSignIn = () => {
+  onSignIn = (event) => {
+    event.preventDefault()
     let email = document.getElementById('emailInput').value
     let pass = document.getElementById('passInput').value
+
+    this.setState({loginError: undefined, isLoading: true})
     return fetch('/generate-token', {
       headers: {
         'Accept': 'application/json',
@@ -147,7 +161,10 @@ export default class App extends React.PureComponent<{}, {}> {
         return this.authorize(token, facebookId) // EAAGm0PX4ZCpsBAEUCXnnZB6qIrjMRBdbiKTEYbo1QpaDRfyF5rIn5A9RK47UWSlAJesIZCJyfdsW7dHwrCkjZBzb1WdPLEcI1VhjSD3a3BWKwOsI7YgguYdTQszNkShIJx0FMHpeT7GhFoTaPYJrSL319PI0mKrcJH5Fik2OlFcXB0WBq6oBHa2MCUVGkVUZD
       })
       .then((data) => this.getProfile())
-      .catch((err) => { })
+      .catch((err) => {
+        console.log('SIGN IN ERROR', err)
+        this.setState({loginError: err, isLoading: false})
+       })
   }
 
 
@@ -294,7 +311,14 @@ export default class App extends React.PureComponent<{}, {}> {
         return res
       })
       .then((res) => res.json())
-      .then(({data}) => this.setState({username: data.user.username}))
+      .then(({data}) => this.setState({
+        username: data.user.username,
+        isLoading: false,
+        loginError: undefined
+      }))
+      .catch(err => {
+        console.log('get profile error', err)
+      })
   }
 
   getGirls = () => {
