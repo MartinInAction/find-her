@@ -27,7 +27,7 @@ export default class App extends React.PureComponent<{}, {}> {
 
   componentDidMount () {
     this.tryToAuth()
-      // .then(() => this.getMatches())
+      .then(() => this.getMatches())
 
   } 
 
@@ -37,7 +37,7 @@ export default class App extends React.PureComponent<{}, {}> {
     return (
       <div className="App" style={{marginTop: 0, backgroundColor: '#0022'}}>
         {username ? <p style={{color: '#fff', fontSize: 20, fontWeight: '800'}}>Logged in as: {username}</p> : <div />}
-        <Button onClick={this.getMatches}>{matches.length > 0 ? 'LOAD MORE' : 'LOAD MATCHES'}</Button>
+        <Button variant="primary" onClick={this.getMatches}>{matches.length > 0 ? 'LOAD MORE' : 'LOAD MATCHES'}</Button>
         <GridGenerator cols={3}>
             {matches.map(this.renderMatch)}
           </GridGenerator>
@@ -47,11 +47,33 @@ export default class App extends React.PureComponent<{}, {}> {
 
   renderLoggedOut = () =>  {
     return (
-      <div style={{flex: 1, marginLeft: 20, display: 'flex', flexDirection: 'column', maxWidth: 400, justifyContent: 'center', alignSelf: 'center'}}>
-        <input id='emailInput' placeholder='email' type='email' style={{marginTop: 20}} />
-        <input id='passInput' placeholder='password' type='password' style={{marginTop: 20}} />
-        <input type='submit' style={{ marginTop: 20 }} value='Sign in' onClick={this.onSignIn} />
-      </div>
+      <Row style={{margin: 20, flex: 1, display: 'flex',  flexDirection: 'column', justifyContent: 'center', alignSelf: 'center'}}>
+        <InputGroup className="mb-3">
+          <InputGroup.Prepend>
+            <InputGroup.Text id="basic-addon1"></InputGroup.Text>
+          </InputGroup.Prepend>
+          <FormControl
+            id='emailInput'
+            type="email" 
+            placeholder="Email"
+            aria-label="Email"
+            aria-describedby="basic-addon1"
+          />
+        </InputGroup>
+        <InputGroup id='email' className="mb-3">
+          <InputGroup.Prepend>
+            <InputGroup.Text id="basic-addon1"></InputGroup.Text>
+          </InputGroup.Prepend>
+          <FormControl
+            id='passInput'
+            type="password" 
+            placeholder="Password"
+            aria-label="Password"
+            aria-describedby="basic-addon1"
+          />
+        </InputGroup>
+        <Button variant="primary" style={{ marginTop: 0 }} onClick={this.onSignIn}>SIGN IN</Button>
+      </Row>
     )
   }
 
@@ -69,7 +91,7 @@ export default class App extends React.PureComponent<{}, {}> {
      */
     if (!match?.person) return <div key={index} />
     return (
-      <div key={index} style={{flex: 1, marginTop: 50}}>
+      <div key={index} style={{border: '2px solid white', borderRadius: 10, paddingTop: 20, flex: 1, marginTop: 50}}>
         <Swiper
           pagination
           spaceBetween={1}
