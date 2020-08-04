@@ -1,19 +1,30 @@
 
-export let getRandomUser = (female = true) => {
+
+export let getRandomUsers = () => {
     return new Promise((resolve, reject) => {
-        fetch('https://randomuser.me/api/?gender=female')
-            .then(res => res.json())
-            .then(res => resolve(res.results)) // [0].picture.large
+        /* fetch(`/asset-detail/mosaics/more-like/169963171?&pagesize=200`, {
+            method: 'GET'
+        })*/
+        Promise.all([
+            getImages(1),
+            getImages(2),
+            getImages(3),   
+        ])
+            .then((res) => res.flat())
+            .then(res => resolve(res))
             .catch(err => reject(err))
     })
 }
 
-
-export let getRandomUsers = (gender = 'female') => {
-    return new Promise((resolve, reject) => {
-        fetch(`https://randomuser.me/api/?results=150&gender=${gender}&inc=picture`)
-            .then(res => res.json())
-            .then(res => resolve(res.results))
-            .catch(err => reject(err))
+let getImages = (page: number) => {
+    return fetch(`/photos/hot-girls?page=${page}`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        }
     })
+    .then(res => res.json())
+    .then((res) => res.gallery.assets)
+    .then((res) => res.map((item) => ({ image: item.thumbUrl, title: item.caption })))
 }

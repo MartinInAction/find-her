@@ -12,6 +12,7 @@
 .gridImage {
     height: 100px;
     width: 100px;
+    margin-right: 5px;
 }
 
 .gridImageAnimation {
