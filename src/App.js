@@ -1,5 +1,5 @@
 import React from 'react';
-import './styles/App.css';
+import styles from './styles/app.module.scss';
 import 'swiper/swiper.scss';
 import 'swiper/components/pagination/pagination.scss';
 import GridGenerator from './components/GridGenerator'
@@ -54,8 +54,8 @@ export default class App extends React.PureComponent<{}, {}> {
     return (
       <>
         <BackgroundGrid />
-        <div className='loggedOutContainer'>
-            <Form onSubmit={(event) => this.onSignIn(event)} className='loggedOutWrapper'>
+        <div className={styles.loggedOutContainer}>
+            <Form onSubmit={this.onSignIn} className={styles.loggedOutWrapper}>
             <img src='/findHerLogo.png' />
               <InputGroup className='mb-3'>
                 <InputGroup.Prepend>
@@ -89,7 +89,7 @@ export default class App extends React.PureComponent<{}, {}> {
                 >
                   {isLoading ? <Spinner animation='grow' size='sm' /> : 'SIGN IN'}
                 </Button>
-                {loginError ? <p className='loginError'>Something went wrong...</p> : <p className='loginError'/>}
+                {loginError ? <p className={styles.loginError}>Something went wrong...</p> : <p className={styles.loginError} />}
             </Form>
         </div>
       </>

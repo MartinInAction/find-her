@@ -1,7 +1,8 @@
-import React from 'react';
-import useWindowDimensions from '../libs/useWindowDimensions';
-import { getRandomUsers } from '../libs/getRandomUser';
-import '../styles/BackgroundGrid.css'
+import React from 'react'
+import useWindowDimensions from '../libs/useWindowDimensions'
+import { getRandomUsers } from '../libs/getRandomUser'
+import styles from '../styles/backgroundgrid.module.scss'
+import cn from 'classnames'
 
 const ImageGrid = ({images}) => {
 
@@ -13,10 +14,10 @@ const ImageGrid = ({images}) => {
     let nrImages = nrHorizontalImages * nrVerticalImages
 
     return (
-      <div className='backgroundGridContainer'>
+      <div className={styles.backgroundGridContainer}>
         {images.map((item, index) => {
             if (index + 1 > nrHorizontalImages * nrVerticalImages) return null
-            return <img src={item.image} key={index} className={'gridImage gridImageAnimation'} alt='person' />
+            return <img src={item.image} key={index} className={cn(styles.gridImage, styles.gridImageAnimation)} alt='person' />
       })}
       </div>
     )
