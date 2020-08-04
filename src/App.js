@@ -13,18 +13,21 @@ SwiperCore.use([Pagination, Virtual]);
 // change this to your own for now
 // then maybe use https://www.npmjs.com/package/get-facebook-id ????
 const MILE_CONVERTER_NUMBER = 1.609344
-export default class App extends React.PureComponent<{}, {}> { 
-  state = {
-    apiToken: undefined,
-    refreshToken: undefined,
-    matches: [],
-    nextPageToken: undefined,
-    hasMessages: 2, // 0 for false, 1 for true and 2 for both :O
-    username: undefined
-  }
+
+const INITIAL_STATE = {
+  apiToken: undefined,
+  refreshToken: undefined,
+  matches: [],
+  nextPageToken: undefined,
+  hasMessages: 2, // 0 for false, 1 for true and 2 for both :O
+  username: undefined
+}
+
+export default class App extends React.PureComponent<{}, {}> {
+  state = INITIAL_STATE
 
   componentDidMount () {
-    // this.tryToAuth()
+    this.tryToAuth()
 
   } 
 
@@ -35,6 +38,7 @@ export default class App extends React.PureComponent<{}, {}> {
       <div style={{marginTop: 0, backgroundColor: '#0022'}}>
         {username ? <p style={{color: '#fff', fontSize: 20, fontWeight: '800'}}>Logged in as: {username}</p> : <div />}
         <Button variant="primary" onClick={this.getMatches}>{matches.length > 0 ? 'LOAD MORE' : 'LOAD MATCHES'}</Button>
+        <Button variant="warning" onClick={this.logoutUser}>SIGN OUT</Button>
         {matches.length > 0 ? <p style={{color: '#fff', marginTop: 20}}>Displaying {matches.length} matches</p> : <div />}
         <GridGenerator cols={3}>
             {matches.map(this.renderMatch)}
@@ -166,7 +170,7 @@ export default class App extends React.PureComponent<{}, {}> {
       })
       return this.getProfile()
     }
-    return Promise.reject(new Error('cant auth'))
+    return Promise.reject('cant auth')
   }
 
   authorize = (token: string, facebook_id: string) => {
@@ -344,6 +348,25 @@ export default class App extends React.PureComponent<{}, {}> {
       })
   }
 
+  logoutUser = () => {
+    return fetch('/auth/logout', {
+      headers: {
+        ...defaultHeaders
+      },
+      method: 'POST'
+    })
+    .then(res => {
+      localStorage.removeItem('tinderApiToken')
+      localStorage.removeItem('tinderRefreshToken')
+      localStorage.removeItem('tinderId')
+
+      this.setState(INITIAL_STATE)
+    })
+    .catch(err => {
+      console.log('Logged out error', err)
+      debugger
+    })
+  }
 }
 
 const defaultHeaders = {

@@ -15,6 +15,13 @@ module.exports = function (app) {
         })
     );
     app.use(
+        '/auth/logout',
+        createProxyMiddleware({
+            target: 'https://api.gotinder.com/v2/',
+            changeOrigin: true,
+        })
+    );
+    app.use(
         '/matches',
         createProxyMiddleware({
             target: 'https://api.gotinder.com/v2/',
