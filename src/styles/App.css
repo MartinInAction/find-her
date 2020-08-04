@@ -1,0 +1,15 @@
+
+.loggedOutContainer {
+  display: flex;
+  align-items: center;
+  height: 100vh;
+}
+
+.loggedOutWrapper {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: 15px 15px 70px 15px;
+  background-color: rgba(0, 0, 0, 0.7);
+}

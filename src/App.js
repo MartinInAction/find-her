@@ -1,12 +1,10 @@
 import React from 'react';
-import './App.css';
+import './styles/App.css';
 import 'swiper/swiper.scss'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { InputGroup, FormControl, Row, Col, Button } from 'react-bootstrap';
-
-
-
+import BackgroundGrid from './components/BackgroundGrid';
 
 // change this to your own for now
 // then maybe use https://www.npmjs.com/package/get-facebook-id ????
@@ -35,7 +33,7 @@ export default class App extends React.PureComponent<{}, {}> {
     let {apiToken, matches, username} = this.state
     if (!apiToken) return this.renderLoggedOut()
     return (
-      <div className="App" style={{marginTop: 0, backgroundColor: '#0022'}}>
+      <div style={{marginTop: 0, backgroundColor: '#0022'}}>
         {username ? <p style={{color: '#fff', fontSize: 20, fontWeight: '800'}}>Logged in as: {username}</p> : <div />}
         <Button onClick={this.getMatches} > GET MATCHES</Button>
         <div>
@@ -47,11 +45,17 @@ export default class App extends React.PureComponent<{}, {}> {
 
   renderLoggedOut = () =>  {
     return (
-      <div style={{flex: 1, marginLeft: 20, display: 'flex', flexDirection: 'column', maxWidth: 400, justifyContent: 'center', alignSelf: 'center'}}>
-        <input id='emailInput' placeholder='email' type='email' style={{marginTop: 20}} />
-        <input id='passInput' placeholder='password' type='password' style={{marginTop: 20}} />
-        <input type='submit' style={{ marginTop: 20 }} value='Sign in' onClick={this.onSignIn} />
+      <>
+      <BackgroundGrid />
+      <div className='loggedOutContainer'>
+        <div className='loggedOutWrapper'>
+            <img src='/findHerLogo.png' />
+            <input id='emailInput' placeholder='email' type='email' style={{marginTop: 20}} />
+            <input id='passInput' placeholder='password' type='password' style={{marginTop: 20}} />
+            <input type='submit' style={{ marginTop: 20 }} value='Sign in' onClick={this.onSignIn} />
+        </div>
       </div>
+      </>
     )
   }
 
@@ -78,8 +82,8 @@ export default class App extends React.PureComponent<{}, {}> {
           slidesPerView={1} 
           >
           {match?.person?.photos.map((photo, index) => {
-            return <SwiperSlide>
-              <img key={index} style={{ borderRadius: 10, resizeMode: 'contain', height: 'auto', width: '50%', maxWidth: 400 }} src={photo?.url} alt='hot grill' />
+            return <SwiperSlide key={index}>
+              <img style={{ borderRadius: 10, resizeMode: 'contain', height: 'auto', width: '50%', maxWidth: 400 }} src={photo?.url} alt='hot grill' />
             </SwiperSlide>
           })}
     </Swiper>        
