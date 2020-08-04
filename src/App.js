@@ -2,7 +2,7 @@ import React from 'react';
 import './App.css';
 import 'swiper/swiper.scss'
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Swiper, SwiperSlide } from 'swiper/react';
+import { Swiper, SwiperSlide } from 'swiper/react'
 import { InputGroup, FormControl, Row, Col, Button } from 'react-bootstrap';
 
 
@@ -67,10 +67,13 @@ export default class App extends React.PureComponent<{}, {}> {
       * common_like_count
       * maybe show on map?
      */
-    if (!match.person) return <div/>
+    if (!match?.person) return <div key={index} />
     return (
       <div key={index} style={{maxWidth: '50%', marginTop: 0, margin: 50, padding: 50, paddingBottom: 20, backgroundColor: 'black'}}>
         <Swiper
+          pagination
+          navigation
+          scrollbar
           spaceBetween={50}
           slidesPerView={1} 
           >
@@ -85,6 +88,15 @@ export default class App extends React.PureComponent<{}, {}> {
         <p style={{ color: 'white' }}>{calculateAge(match.birth_date)} år</p>
       </div>
     )
+  }
+
+  renderErrorMessage = (errorMessage?: string) => {
+    return <div style={{top: 0, width: '100%', backgroundColor: 'red', height: 50, position: 'absolute'}}>
+      <p>Something went wrong, plz try again</p>
+      <br />
+      <p>{errorMessage}</p>
+
+    </div>
   }
 
   onSignIn = () => {
@@ -106,7 +118,7 @@ export default class App extends React.PureComponent<{}, {}> {
         let {token, facebookId} = data
         return this.authorize(token, facebookId) // EAAGm0PX4ZCpsBAEUCXnnZB6qIrjMRBdbiKTEYbo1QpaDRfyF5rIn5A9RK47UWSlAJesIZCJyfdsW7dHwrCkjZBzb1WdPLEcI1VhjSD3a3BWKwOsI7YgguYdTQszNkShIJx0FMHpeT7GhFoTaPYJrSL319PI0mKrcJH5Fik2OlFcXB0WBq6oBHa2MCUVGkVUZD
       })
-      .then((data) => this.getMatches())
+      .then((data) => this.getProfile())
       .catch((err) => { })
   }
 
@@ -194,13 +206,13 @@ export default class App extends React.PureComponent<{}, {}> {
     })
       .then((res) => res?.json())
       .then((res) => {
-        if (!res?.data) return Promise.reject(new Error('could not get matches'))
+        if (!res?.data) return Promise.reject(new Error(res))
         this.setState({ nextPageToken: res?.data?.next_page_token })
         return Promise.all(res.data.matches.map((match) => this.enhanceMatch(match)))
         // return res.data.matches
       })
       .then((enhancedMatches) => {
-        let { matches } = this.state
+        let {matches} = this.state
         enhancedMatches = [...matches, ...enhancedMatches]
         enhancedMatches.sort((a, b) => a.distance_mi - b.distance_mi)
 
@@ -221,6 +233,10 @@ export default class App extends React.PureComponent<{}, {}> {
         'X-Auth-Token': apiToken,
       },
       method: 'GET'
+    })
+    .then((res) => {
+      if (res.status === 429) return Promise.reject(new Error('Too Many Requests'))
+      return res
     })
     .then((res) => res.json())
     /* .then((res) => {
