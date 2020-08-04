@@ -1,10 +1,14 @@
 import React from 'react';
 import './styles/App.css';
-import 'swiper/swiper.scss'
+import 'swiper/swiper.scss';
+import 'swiper/components/pagination/pagination.scss';
+import GridGenerator from './components/GridGenerator'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Swiper, SwiperSlide } from 'swiper/react'
-import { InputGroup, FormControl, Row, Col, Button } from 'react-bootstrap';
+import SwiperCore, { Pagination, Virtual} from 'swiper';
+import { InputGroup, FormControl, Row, Button } from 'react-bootstrap';
 import BackgroundGrid from './components/BackgroundGrid';
+SwiperCore.use([Pagination, Virtual]);
 
 // change this to your own for now
 // then maybe use https://www.npmjs.com/package/get-facebook-id ????
@@ -20,12 +24,7 @@ export default class App extends React.PureComponent<{}, {}> {
   }
 
   componentDidMount () {
-    this.tryToAuth()
-    /* return this.getProfile()
-      .then((res)  => {
-        debugger
-      })*/
-    // this.getGirls()
+    // this.tryToAuth()
 
   } 
 
@@ -35,10 +34,11 @@ export default class App extends React.PureComponent<{}, {}> {
     return (
       <div style={{marginTop: 0, backgroundColor: '#0022'}}>
         {username ? <p style={{color: '#fff', fontSize: 20, fontWeight: '800'}}>Logged in as: {username}</p> : <div />}
-        <Button onClick={this.getMatches} > GET MATCHES</Button>
-        <div>
-          {matches.map(this.renderMatch)}
-        </div>
+        <Button variant="primary" onClick={this.getMatches}>{matches.length > 0 ? 'LOAD MORE' : 'LOAD MATCHES'}</Button>
+        {matches.length > 0 ? <p style={{color: '#fff', marginTop: 20}}>Displaying {matches.length} matches</p> : <div />}
+        <GridGenerator cols={3}>
+            {matches.map(this.renderMatch)}
+          </GridGenerator>
       </div>
     );
   }
@@ -46,15 +46,37 @@ export default class App extends React.PureComponent<{}, {}> {
   renderLoggedOut = () =>  {
     return (
       <>
-      <BackgroundGrid />
-      <div className='loggedOutContainer'>
-        <div className='loggedOutWrapper'>
-            <img src='/findHerLogo.png' />
-            <input id='emailInput' placeholder='email' type='email' style={{marginTop: 20}} />
-            <input id='passInput' placeholder='password' type='password' style={{marginTop: 20}} />
-            <input type='submit' style={{ marginTop: 20 }} value='Sign in' onClick={this.onSignIn} />
+        <BackgroundGrid />
+        <div className='loggedOutContainer'>
+          <div className='loggedOutWrapper'>
+          <img src='/findHerLogo.png' />
+          <InputGroup className="mb-3">
+            <InputGroup.Prepend>
+              <InputGroup.Text id="basic-addon1"></InputGroup.Text>
+            </InputGroup.Prepend>
+            <FormControl
+              id='emailInput'
+              type="email" 
+              placeholder="Email"
+              aria-label="Email"
+              aria-describedby="basic-addon1"
+            />
+          </InputGroup>
+          <InputGroup id='email' className="mb-3">
+            <InputGroup.Prepend>
+              <InputGroup.Text id="basic-addon1"></InputGroup.Text>
+            </InputGroup.Prepend>
+            <FormControl
+              id='passInput'
+              type="password" 
+              placeholder="Password"
+              aria-label="Password"
+              aria-describedby="basic-addon1"
+            />
+          </InputGroup>
+          <Button variant="primary" style={{ marginTop: 0 }} onClick={this.onSignIn}>SIGN IN</Button>
+          </div>
         </div>
-      </div>
       </>
     )
   }
@@ -73,17 +95,15 @@ export default class App extends React.PureComponent<{}, {}> {
      */
     if (!match?.person) return <div key={index} />
     return (
-      <div key={index} style={{maxWidth: '50%', marginTop: 0, margin: 50, padding: 50, paddingBottom: 20, backgroundColor: 'black'}}>
+      <div key={index} style={{border: '2px solid white', borderRadius: 10, paddingTop: 20, flex: 1, marginTop: 50}}>
         <Swiper
           pagination
-          navigation
-          scrollbar
-          spaceBetween={50}
+          spaceBetween={1}
           slidesPerView={1} 
           >
           {match?.person?.photos.map((photo, index) => {
             return <SwiperSlide key={index}>
-              <img style={{ borderRadius: 10, resizeMode: 'contain', height: 'auto', width: '50%', maxWidth: 400 }} src={photo?.url} alt='hot grill' />
+              <img style={{borderRadius: 10, resizeMode: 'contain', height: 250, width: 'auto', maxWidth: 400 }} src={photo?.url} alt='hot grill' />
             </SwiperSlide>
           })}
     </Swiper>        
@@ -145,8 +165,6 @@ export default class App extends React.PureComponent<{}, {}> {
         tinderId: tinderId
       })
       return this.getProfile()
-        /* .then(() => delay(10000))
-        .then(() => this.getMatches(this.state.nextPageToken)) */
     }
     return Promise.reject(new Error('cant auth'))
   }
@@ -187,8 +205,8 @@ export default class App extends React.PureComponent<{}, {}> {
       })
   }
 
-  getMatches = (page_token?: string) => {  
-    let {hasMessages} = this.state
+  getMatches = () => {  
+    let { hasMessages, nextPageToken} = this.state
     /* filter on 
     is_boost_match: false
     is_experiences_match: false
@@ -198,9 +216,11 @@ export default class App extends React.PureComponent<{}, {}> {
     is_super_like: false
     is_tinder_u: false
     */
-    let baseUrl = `/matches?&count=25&message=${hasMessages}&distance_mi=1`
-    console.warn(page_token)
-    let url = page_token && typeof page_token === 'string' ? `${baseUrl}&page_token=${page_token}` : baseUrl
+    let baseUrl = `/matches?&count=25&message=${hasMessages}`
+    console.log(nextPageToken)
+
+    let url = !!nextPageToken && typeof nextPageToken === 'string' ? `${baseUrl}&page_token=${nextPageToken}` : baseUrl
+    console.log(url)
     return fetch(url, {
       headers: {
         ...defaultHeaders,
