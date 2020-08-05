@@ -1,13 +1,16 @@
-import React from 'react';
-import styles from './styles/app.module.scss';
-import 'swiper/swiper.scss';
-import 'swiper/components/pagination/pagination.scss';
+import React from 'react'
+import styles from './styles/app.module.scss'
+import 'swiper/swiper.scss'
+import 'swiper/components/pagination/pagination.scss'
 import GridGenerator from './components/GridGenerator'
-import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css'
 import { Swiper, SwiperSlide } from 'swiper/react'
-import SwiperCore, { Pagination, Virtual} from 'swiper';
-import { InputGroup, FormControl, Row, Button, Form, Spinner } from 'react-bootstrap';
-import BackgroundGrid from './components/BackgroundGrid';
+import SwiperCore, { Pagination, Virtual} from 'swiper'
+import { InputGroup, FormControl, Button, Form, Spinner } from 'react-bootstrap'
+import BackgroundGrid from './components/BackgroundGrid'
+import MatchSearchInput from './components/MatchSearchInput'
+import DispayText from './components/DisplayText'
+import { calculateAge } from './libs/Common'
 SwiperCore.use([Pagination, Virtual]);
 
 // change this to your own for now
@@ -22,7 +25,8 @@ const INITIAL_STATE = {
   hasMessages: 2, // 0 for false, 1 for true and 2 for both :O
   username: undefined,
   loginError: undefined,
-  isLoading: false
+  isLoading: false,
+  filteredMatches: []
 }
 
 export default class App extends React.PureComponent<{}, {}> {
@@ -34,16 +38,17 @@ export default class App extends React.PureComponent<{}, {}> {
   } 
 
   render () {
-    let {apiToken, matches, username} = this.state
+    let {apiToken, matches, username, filteredMatches} = this.state
     if (!apiToken) return this.renderLoggedOut()
     return (
       <div style={{marginTop: 0, backgroundColor: '#0022'}}>
         {username ? <p style={{color: '#fff', fontSize: 20, fontWeight: '800'}}>Logged in as: {username}</p> : <div />}
         <Button variant='primary' onClick={this.getMatches}>{matches.length > 0 ? 'LOAD MORE' : 'LOAD MATCHES'}</Button>
         <Button variant='primary' style={{ backgroundColor: 'red', borderColor: 'red' }} onClick={this.logoutUser}>SIGN OUT</Button>
-        {matches.length > 0 ? <p style={{color: '#fff', marginTop: 20}}>Displaying {matches.length} matches</p> : <div />}
+        <MatchSearchInput matches={matches} onFilteredMatches={this.onFilteredMatches} />
+        <DispayText number={filteredMatches.length > 0 ? filteredMatches.length : matches.length} />
         <GridGenerator cols={3}>
-            {matches.map(this.renderMatch)}
+          {filteredMatches.length > 0 ? filteredMatches.map(this.renderMatch) : matches.map(this.renderMatch)}
           </GridGenerator>
       </div>
     );
@@ -56,7 +61,7 @@ export default class App extends React.PureComponent<{}, {}> {
         <BackgroundGrid />
         <div className={styles.loggedOutContainer}>
             <Form onSubmit={this.onSignIn} className={styles.loggedOutWrapper}>
-            <img src='/findHerLogo.png' />
+            <img src='/findHerLogo.png' alt='Find Her' />
               <InputGroup className='mb-3'>
                 <InputGroup.Prepend>
                   <InputGroup.Text id='basic-addon1'></InputGroup.Text>
@@ -137,6 +142,8 @@ export default class App extends React.PureComponent<{}, {}> {
 
     </div>
   }
+
+  onFilteredMatches = (filteredMatches) => this.setState({filteredMatches})
 
   onSignIn = (event) => {
     event.preventDefault()
@@ -399,12 +406,6 @@ const defaultHeaders = {
     'Content-Type': 'application/json',
     'platform': 'ios',
     'Accept-Language': 'en'
-}
-
-function calculateAge(birthday: Date) { // birthday is a date
-  var ageDifMs = Date.now() - new Date(birthday).getTime();
-  var ageDate = new Date(ageDifMs); // miliseconds from epoch
-  return Math.abs(ageDate.getUTCFullYear() - 1970);
 }
 
 function delay(time) {

@@ -16,7 +16,7 @@ const ImageGrid = ({images}) => {
     return (
       <div className={styles.backgroundGridContainer}>
         {images.map((item, index) => {
-            if (index + 1 > nrHorizontalImages * nrVerticalImages) return null
+            if (index + 1 > nrImages) return null
             return <img src={item.image} key={index} className={cn(styles.gridImage, styles.gridImageAnimation)} alt='person' />
       })}
       </div>
