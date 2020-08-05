@@ -11,6 +11,7 @@ import styles from './styles/app.module.scss'
 import MatchSearchInput from './components/MatchSearchInput'
 import DispayText from './components/DisplayText'
 import { calculateAge } from './libs/Common'
+import * as ApiHandler from './libs/ApiHandler'
 SwiperCore.use([Pagination, Virtual]);
 
 // change this to your own for now
@@ -70,7 +71,7 @@ export default class App extends React.PureComponent<{}, {}> {
       <>
         <BackgroundGrid />
         <div className={styles.loggedOutContainer}>
-          <Form onSubmit={this.onSignIn} className={styles.loggedOutWrapper}>
+          <Form onSubmit={this.signIn} className={styles.loggedOutWrapper}>
             <img src='/findHerLogo.png' alt='Find Her' />
             <InputGroup className='mb-3'>
               <InputGroup.Prepend>
@@ -123,7 +124,6 @@ export default class App extends React.PureComponent<{}, {}> {
       * common_like_count
       * maybe show on map?
      */
-    debugger
     if (!match?.person) return <div key={index} />
     return (
       <div key={index} style={{border: '2px solid white', borderRadius: 10, paddingTop: 20, flex: 1, marginTop: 50}}>
@@ -151,33 +151,20 @@ export default class App extends React.PureComponent<{}, {}> {
       <p>Something went wrong, plz try again</p>
       <br />
       <p>{errorMessage}</p>
-
     </div>
   }
 
   onFilteredMatches = (filteredMatches) => this.setState({filteredMatches})
 
-  onSignIn = (event) => {
+  signIn = (event) => {
     event.preventDefault()
     let email = document.getElementById('emailInput').value
     let pass = document.getElementById('passInput').value
-
     this.setState({loginError: undefined, isLoading: true})
-    return fetch('/generate-token', {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-      body: JSON.stringify({
-        email,
-        pass
-      })
-    })
-      .then((res) => res.json())
+    return ApiHandler.generateToken(email, pass)
       .then((data) => {
         let {token, facebookId} = data
-        return this.authorize(token, facebookId) // EAAGm0PX4ZCpsBAEUCXnnZB6qIrjMRBdbiKTEYbo1QpaDRfyF5rIn5A9RK47UWSlAJesIZCJyfdsW7dHwrCkjZBzb1WdPLEcI1VhjSD3a3BWKwOsI7YgguYdTQszNkShIJx0FMHpeT7GhFoTaPYJrSL319PI0mKrcJH5Fik2OlFcXB0WBq6oBHa2MCUVGkVUZD
+        return this.authorize(token, facebookId)
       })
       .then((data) => this.getProfile())
       .catch((err) => {
@@ -220,22 +207,9 @@ export default class App extends React.PureComponent<{}, {}> {
   }
 
   authorize = (token: string, facebook_id: string) => {
-    if (this.hasAuth()) this.tryToAuth()
-    return fetch(`/auth/login/facebook`, {
-      headers: {
-        ...defaultHeaders
-      },
-      method: 'POST',
-      body: JSON.stringify({
-        token,
-        facebook_id,
-        locale: 'en'
-      }),
-      json: true
-    })
-      .then((res) => res.json())
+    return ApiHandler.authorize(token, facebook_id)
       .then((res) => {
-        let { data } = res
+        let {data} = res
         localStorage.setItem('tinderApiToken', data.api_token)
         localStorage.setItem('tinderRefreshToken', data.refresh_token)
         localStorage.setItem('tinderId', data._id)
@@ -266,19 +240,7 @@ export default class App extends React.PureComponent<{}, {}> {
     is_super_like: false
     is_tinder_u: false
     */
-    let baseUrl = `/matches?&count=25&message=${hasMessages}`
-    console.log(nextPageToken)
-
-    let url = !!nextPageToken && typeof nextPageToken === 'string' ? `${baseUrl}&page_token=${nextPageToken}` : baseUrl
-    console.log(url)
-    return fetch(url, {
-      headers: {
-        ...defaultHeaders,
-        'X-Auth-Token': localStorage.getItem('tinderApiToken'),
-      },
-      method: 'GET'
-    })
-      .then((res) => res?.json())
+    ApiHandler.getMatches(hasMessages, nextPageToken)
       .then((res) => {
         if (!res?.data) return Promise.reject(new Error(res))
         this.setState({ nextPageToken: res?.data?.next_page_token })
@@ -290,54 +252,19 @@ export default class App extends React.PureComponent<{}, {}> {
         enhancedMatches = [...matches, ...enhancedMatches]
         this.setState({ matches: enhancedMatches })
       })
-      .catch((error) => {
-        debugger
-      })
+      .catch((error) => {})
 
   }
 
   enhanceMatch = (match: Object) => {
-    let {apiToken} = this.state
-    return fetch(`/user/${match.person._id}`, {
-      // 5e1777f2890f930100e04e3c
-      headers: {
-        ...defaultHeaders,
-        'X-Auth-Token': apiToken,
-      },
-      method: 'GET'
-    })
-    .then((res) => {
-      if (res.status === 429) return Promise.reject(new Error('Too Many Requests'))
-      return res
-    })
-    .then((res) => res.json())
-    /* .then((res) => {
-      return delay(500)
-    })*/
+    return ApiHandler.getUser(match.person._id)
     .then((res) => res.results)
     .then((res) => ({...match, ...res}))
-    .catch((res) => {
-      debugger
-    })
+    .catch((res) => {})
   }
 
   getProfile = () => {
-    let tinderApiToken = localStorage.getItem('tinderApiToken') || undefined
-    return fetch('/profile?include=likes%2Cplus_control%2Cproducts%2Cpurchase%2Cuser', {
-      headers: {
-        ...defaultHeaders,
-        'X-Auth-Token': tinderApiToken,
-      },
-      method: 'GET'
-    })
-      .then((res) => {
-        if (res.statusText === 'Unauthorized') {
-          return this.refreshToken()
-            .then(() => this.getProfile())
-        }
-        return res
-      })
-      .then((res) => res.json())
+    return ApiHandler.getProfile()
       .then(({data}) => this.setState({
         username: data.user.username,
         isLoading: false,
@@ -349,44 +276,14 @@ export default class App extends React.PureComponent<{}, {}> {
   }
 
   getGirls = () => {
-    let tinderApiToken = localStorage.getItem('tinderApiToken') || undefined
-    return fetch('/user/recs', {
-      headers: {
-        ...defaultHeaders,
-        'X-Auth-Token': tinderApiToken,
-      },
-      method: 'GET'
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        debugger
-      })
-      .catch((err) => {
-        debugger
-      })
+    return ApiHandler.getRecommendations()
+      .then((res) => {}) // set in state?
+      .catch((err) => {})
   }
 
   refreshToken = () => {
-    let tinderApiToken = localStorage.getItem('tinderApiToken') || undefined
-    let tinderRefreshToken = localStorage.getItem('tinderRefreshToken') || undefined
-    return fetch('/auth', {
-      headers: {
-        ...defaultHeaders,
-        'X-Auth-Token': tinderApiToken,
-      },
-      method: 'POST',
-      body: JSON.stringify({
-        grant_type: 'refresh_token',
-        refresh_token: tinderRefreshToken,
-      })
-    })
-    .then((res) => {
-      debugger
-      return res
-    })
-      .then((res) => res.json())
+    return ApiHandler.refreshToken()
       .then(({data}) => {
-        debugger
         localStorage.setItem('tinderApiToken', data.api_token)
         localStorage.setItem('tinderRefreshToken', data.refresh_token)
         this.setState({
@@ -394,42 +291,19 @@ export default class App extends React.PureComponent<{}, {}> {
           refreshToken: data.refresh_token
         })
       })
-      .catch((err) => {
-        debugger
-      })
+      .catch((err) => {})
   }
 
   logoutUser = () => {
-    return fetch('/auth/logout', {
-      headers: {
-        ...defaultHeaders
-      },
-      method: 'POST'
-    })
+    return ApiHandler.logout()
     .then(res => {
       localStorage.removeItem('tinderApiToken')
       localStorage.removeItem('tinderRefreshToken')
       localStorage.removeItem('tinderId')
-
       this.setState(INITIAL_STATE)
     })
     .catch(err => {
       console.log('Logged out error', err)
-      debugger
     })
   }
-}
-
-const defaultHeaders = {
-    'User-Agent': 'Tinder/7.5.3 (iPhone; iOS 10.3.2; Scale/2.00)',
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
-    'platform': 'ios',
-    'Accept-Language': 'en'
-}
-
-function delay(time) {
-  return new Promise(function (resolve) {
-    setTimeout(resolve, time)
-  });
 }

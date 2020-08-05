@@ -25,8 +25,7 @@ export default class LoggedOutScreen extends React.PureComponent<{}, {}> {
                                 type='text'
                                 placeholder='Email'
                                 aria-label='Email'
-                                aria-describedby='basic-addon1'
-                            />
+                                aria-describedby='basic-addon1' />
                         </InputGroup>
                         <InputGroup className='mb-3'>
                             <InputGroup.Prepend>
@@ -44,8 +43,7 @@ export default class LoggedOutScreen extends React.PureComponent<{}, {}> {
                             variant='primary'
                             style={{ backgroundColor: 'red', borderColor: 'red', marginTop: 0 }}
                             disabled={isLoading}
-                            type='submit'
-                        >
+                            type='submit'>
                             {isLoading ? <Spinner animation='grow' size='sm' /> : 'SIGN IN'}
                         </Button>
                         {loginError ? <p className={styles.loginError}>Something went wrong...</p> : <p className={styles.loginError} />}
