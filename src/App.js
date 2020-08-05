@@ -1,20 +1,22 @@
 import React from 'react'
-import styles from './styles/app.module.scss'
-import 'swiper/swiper.scss'
-import 'swiper/components/pagination/pagination.scss'
 import GridGenerator from './components/GridGenerator'
 import 'bootstrap/dist/css/bootstrap.min.css'
+import 'swiper/swiper.scss'
+import 'swiper/components/pagination/pagination.scss'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import SwiperCore, { Pagination, Virtual} from 'swiper'
-import { InputGroup, FormControl, Button, Form, Spinner } from 'react-bootstrap'
+import { InputGroup, FormControl, Button, Form, Spinner, DropdownButton, Dropdown} from 'react-bootstrap'
 import BackgroundGrid from './components/BackgroundGrid'
+import styles from './styles/app.module.scss'
 import MatchSearchInput from './components/MatchSearchInput'
 import DispayText from './components/DisplayText'
 import { calculateAge } from './libs/Common'
 SwiperCore.use([Pagination, Virtual]);
 
 // change this to your own for now
-// then maybe use https://www.npmjs.com/package/get-facebook-id ????
+const AGE = 'AGE'
+const LOCATION = 'LOCATION'
+const MATCHED_AT = 'MATCHED_AT'
 const MILE_CONVERTER_NUMBER = 1.609344
 
 const INITIAL_STATE = {
@@ -24,9 +26,8 @@ const INITIAL_STATE = {
   nextPageToken: undefined,
   hasMessages: 2, // 0 for false, 1 for true and 2 for both :O
   username: undefined,
-  loginError: undefined,
-  isLoading: false,
-  filteredMatches: []
+  filteredMatches: [],
+  sort: undefined
 }
 
 export default class App extends React.PureComponent<{}, {}> {
@@ -34,7 +35,6 @@ export default class App extends React.PureComponent<{}, {}> {
 
   componentDidMount () {
     this.tryToAuth()
-
   } 
 
   render () {
@@ -46,6 +46,7 @@ export default class App extends React.PureComponent<{}, {}> {
         <Button variant='primary' onClick={this.getMatches}>{matches.length > 0 ? 'LOAD MORE' : 'LOAD MATCHES'}</Button>
         <Button variant='primary' style={{ backgroundColor: 'red', borderColor: 'red' }} onClick={this.logoutUser}>SIGN OUT</Button>
         <MatchSearchInput matches={matches} onFilteredMatches={this.onFilteredMatches} />
+        {this.renderSort()}
         <DispayText number={filteredMatches.length > 0 ? filteredMatches.length : matches.length} />
         <GridGenerator cols={3}>
           {filteredMatches.length > 0 ? filteredMatches.map(this.renderMatch) : matches.map(this.renderMatch)}
@@ -54,48 +55,57 @@ export default class App extends React.PureComponent<{}, {}> {
     );
   }
 
-  renderLoggedOut = () =>  {
-    let {isLoading, loginError} = this.state
+  renderSort = () => {
+    let {matches} = this.state
+    if (matches.length === 0) return <div />
+    return <DropdownButton id="dropdown-basic-button" title={`Sort: ${this.state.sort}`}>
+      <Dropdown.Item onClick={this.setSortingAge}>Age</Dropdown.Item>
+      <Dropdown.Item onClick={this.setSortingLocation}>Location</Dropdown.Item>
+    </DropdownButton>
+  }
+
+  renderLoggedOut = () => {
+    let { isLoading, loginError } = this.state
     return (
       <>
         <BackgroundGrid />
         <div className={styles.loggedOutContainer}>
-            <Form onSubmit={this.onSignIn} className={styles.loggedOutWrapper}>
+          <Form onSubmit={this.onSignIn} className={styles.loggedOutWrapper}>
             <img src='/findHerLogo.png' alt='Find Her' />
-              <InputGroup className='mb-3'>
-                <InputGroup.Prepend>
-                  <InputGroup.Text id='basic-addon1'></InputGroup.Text>
-                </InputGroup.Prepend>
-                <FormControl
-                  id='emailInput'
-                  type='text'
-                  placeholder='Email'
-                  aria-label='Email'
-                  aria-describedby='basic-addon1'
-                />
-              </InputGroup>
-              <InputGroup className='mb-3'>
-                <InputGroup.Prepend>
-                  <InputGroup.Text id='basic-addon1'></InputGroup.Text>
-                </InputGroup.Prepend>
-                <FormControl
-                  id='passInput'
-                  type='password' 
-                  placeholder='Password'
-                  aria-label='Password'
-                  aria-describedby='basic-addon1'
-                />
-              </InputGroup>
-              <Button
-                variant='primary'
-                style={{backgroundColor: 'red', borderColor: 'red', marginTop: 0}}
-                disabled={isLoading}
-                type='submit'
-                >
-                  {isLoading ? <Spinner animation='grow' size='sm' /> : 'SIGN IN'}
-                </Button>
-                {loginError ? <p className={styles.loginError}>Something went wrong...</p> : <p className={styles.loginError} />}
-            </Form>
+            <InputGroup className='mb-3'>
+              <InputGroup.Prepend>
+                <InputGroup.Text id='basic-addon1'></InputGroup.Text>
+              </InputGroup.Prepend>
+              <FormControl
+                id='emailInput'
+                type='text'
+                placeholder='Email'
+                aria-label='Email'
+                aria-describedby='basic-addon1'
+              />
+            </InputGroup>
+            <InputGroup className='mb-3'>
+              <InputGroup.Prepend>
+                <InputGroup.Text id='basic-addon1'></InputGroup.Text>
+              </InputGroup.Prepend>
+              <FormControl
+                id='passInput'
+                type='password'
+                placeholder='Password'
+                aria-label='Password'
+                aria-describedby='basic-addon1'
+              />
+            </InputGroup>
+            <Button
+              variant='primary'
+              style={{ backgroundColor: 'red', borderColor: 'red', marginTop: 0 }}
+              disabled={isLoading}
+              type='submit'
+            >
+              {isLoading ? <Spinner animation='grow' size='sm' /> : 'SIGN IN'}
+            </Button>
+            {loginError ? <p className={styles.loginError}>Something went wrong...</p> : <p className={styles.loginError} />}
+          </Form>
         </div>
       </>
     )
@@ -113,6 +123,7 @@ export default class App extends React.PureComponent<{}, {}> {
       * common_like_count
       * maybe show on map?
      */
+    debugger
     if (!match?.person) return <div key={index} />
     return (
       <div key={index} style={{border: '2px solid white', borderRadius: 10, paddingTop: 20, flex: 1, marginTop: 50}}>
@@ -130,6 +141,7 @@ export default class App extends React.PureComponent<{}, {}> {
         <p style={{color: 'white', fontSize: 20, fontWeight: '800'}}>{match.person.name}</p>
         <p style={{ color: 'white' }}>{Math.floor(match.distance_mi * MILE_CONVERTER_NUMBER)} km</p>
         <p style={{ color: 'white' }}>{calculateAge(match.birth_date)} år</p>
+        {/* <p style={{ color: 'white' }}>{match.bio}</p>*/}
       </div>
     )
   }
@@ -174,6 +186,16 @@ export default class App extends React.PureComponent<{}, {}> {
        })
   }
 
+  setSortingAge = () => {
+    let {matches} = this.state
+    matches.sort((a, b) => calculateAge(a.birth_date) - calculateAge(b.birth_date))
+    this.setState({sort: AGE, matches})
+  }
+  setSortingLocation = () => {
+    let { matches } = this.state
+    matches.sort((a, b) => a.distance_mi - b.distance_mi)
+    this.setState({sort: LOCATION, matches})
+  }
 
   hasAuth = () => {
     let tinderApiToken = localStorage.getItem('tinderApiToken') || undefined
@@ -266,8 +288,6 @@ export default class App extends React.PureComponent<{}, {}> {
       .then((enhancedMatches) => {
         let {matches} = this.state
         enhancedMatches = [...matches, ...enhancedMatches]
-        enhancedMatches.sort((a, b) => a.distance_mi - b.distance_mi)
-
         this.setState({ matches: enhancedMatches })
       })
       .catch((error) => {
