@@ -12,6 +12,7 @@ import MatchSearchInput from './MatchSearchInput'
 import DispayText from './DisplayText'
 import { calculateAge } from '../libs/Common'
 import * as ApiHandler from '../libs/ApiHandler'
+import { GET_MATCH_AMOUNT } from '../libs/Consts'
 SwiperCore.use([Pagination, Virtual]);
 
 // change this to your own for now
@@ -229,8 +230,17 @@ export default class AppStateManager extends React.PureComponent<{}, {}> {
             })
     }
 
+    hasMoreMatches = () => {
+        let {matches} = this.state
+        if (matches.length === 0) return true
+        if (matches.length < GET_MATCH_AMOUNT) return false
+    }
+
     getMatches = () => {
         let { hasMessages, nextPageToken } = this.state
+
+        if (!this.hasMoreMatches()) return null
+
         /* filter on 
         is_boost_match: false
         is_experiences_match: false

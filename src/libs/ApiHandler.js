@@ -1,3 +1,5 @@
+import { GET_MATCH_AMOUNT } from './Consts'
+
 const GET = 'GET'
 const POST = 'POST'
 
@@ -32,7 +34,7 @@ return fetch(`/auth/login/facebook`, {
 }
 
 export let getMatches = (hasMessages: boolean, nextPageToken?: string) => {
-    let baseUrl = `/matches?&count=25&message=${hasMessages}`
+    let baseUrl = `/matches?&count=${GET_MATCH_AMOUNT}&message=${hasMessages}`
     let url = !!nextPageToken && typeof nextPageToken === 'string' ? `${baseUrl}&page_token=${nextPageToken}` : baseUrl
     return fetch(url, {
         headers: {
