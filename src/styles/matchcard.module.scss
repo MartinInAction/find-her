@@ -1,0 +1,55 @@
+@import './mixins.scss';
+
+.container {
+     background-color: black;
+     border-radius: 10px;
+     border: 1px solid white;
+     margin-top: 50px;
+     padding-top: 20
+ }
+
+ .swiper {
+     background-color: black;
+     margin-top: .5rem;
+     
+ }
+
+ .border {
+    border-radius: 10px;
+    border: 1px solid white;
+ }
+
+ .slide {
+     display: flex;
+     justify-content: center;
+ }
+
+ .image {
+    height: 350px;
+    width: auto;
+    max-width: calc(100% - 1rem);
+
+    @include sm-min {
+        height: 250px;
+    }
+
+    @include xl-min {
+        height: 400px;
+    }
+}
+
+.textWrapper {
+    display: flex;
+    flex-direction: column;
+    margin: 0 1rem .5rem;
+
+    p {
+        color: white;
+        margin-bottom: 5px;
+    }
+
+    p:first-child {
+        font-size: 2rem;
+        font-weight: 800;
+    }
+}

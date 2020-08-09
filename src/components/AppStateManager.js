@@ -1,10 +1,6 @@
 import React from 'react'
 import GridGenerator from './GridGenerator'
 import 'bootstrap/dist/css/bootstrap.min.css'
-import 'swiper/swiper.scss'
-import 'swiper/components/pagination/pagination.scss'
-import { Swiper, SwiperSlide } from 'swiper/react'
-import SwiperCore, { Pagination, Virtual } from 'swiper'
 import { InputGroup, FormControl, Button, Form, Spinner, DropdownButton, Dropdown } from 'react-bootstrap'
 import BackgroundGrid from './BackgroundGrid'
 import styles from '../styles/app.module.scss'
@@ -12,14 +8,8 @@ import MatchSearchInput from './MatchSearchInput'
 import DispayText from './DisplayText'
 import { calculateAge } from '../libs/Common'
 import * as ApiHandler from '../libs/ApiHandler'
-import { GET_MATCH_AMOUNT } from '../libs/Consts'
-SwiperCore.use([Pagination, Virtual]);
-
-// change this to your own for now
-const AGE = 'AGE'
-const LOCATION = 'LOCATION'
-const MATCHED_AT = 'MATCHED_AT'
-const MILE_CONVERTER_NUMBER = 1.609344
+import { GET_MATCH_AMOUNT, LOCATION, AGE } from '../libs/Consts'
+import MatchCard from './MatchCard'
 
 const INITIAL_STATE = {
     apiToken: undefined,
@@ -114,37 +104,8 @@ export default class AppStateManager extends React.PureComponent<{}, {}> {
     }
 
     renderMatch = (match: Object, index: number) => {
-        /**
-         * TODO
-         * seen: match_seen: true // can see if match is opened
-         * 
-          * sort on :
-          * birth_date,
-          * last_activity_date
-          * common_friend_count
-          * common_like_count
-          * maybe show on map?
-         */
         if (!match?.person) return <div key={index} />
-        return (
-            <div key={index} style={{ border: '2px solid white', borderRadius: 10, paddingTop: 20, flex: 1, marginTop: 50 }}>
-                <Swiper
-                    pagination
-                    spaceBetween={1}
-                    slidesPerView={1}
-                >
-                    {match?.person?.photos.map((photo, index) => {
-                        return <SwiperSlide key={index}>
-                            <img style={{ borderRadius: 10, resizeMode: 'contain', height: 250, width: 'auto', maxWidth: 400 }} src={photo?.url} alt='hot grill' />
-                        </SwiperSlide>
-                    })}
-                </Swiper>
-                <p style={{ color: 'white', fontSize: 20, fontWeight: '800' }}>{match.person.name}</p>
-                <p style={{ color: 'white' }}>{Math.floor(match.distance_mi * MILE_CONVERTER_NUMBER)} km</p>
-                <p style={{ color: 'white' }}>{calculateAge(match.birth_date)} år</p>
-                {/* <p style={{ color: 'white' }}>{match.bio}</p>*/}
-            </div>
-        )
+        return <MatchCard match={match} />
     }
 
     renderErrorMessage = (errorMessage?: string) => {
