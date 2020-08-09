@@ -10,6 +10,7 @@ import { calculateAge } from '../libs/Common'
 import * as ApiHandler from '../libs/ApiHandler'
 import { GET_MATCH_AMOUNT, LOCATION, AGE } from '../libs/Consts'
 import MatchCard from './MatchCard'
+import {delay} from '../libs/Common'
 
 const INITIAL_STATE = {
     apiToken: undefined,
@@ -35,7 +36,7 @@ export default class AppStateManager extends React.PureComponent<{}, {}> {
         return (
             <div style={{ marginTop: 0, backgroundColor: '#0022' }}>
                 {username ? <p style={{ color: '#fff', fontSize: 20, fontWeight: '800' }}>Logged in as: {username}</p> : <div />}
-                <Button variant='primary' onClick={this.getMatches}>{matches.length > 0 ? 'LOAD MORE' : 'LOAD MATCHES'}</Button>
+                <Button variant='primary' onClick={this.getAllMatches}>{matches.length > 0 ? 'LOAD MORE' : 'LOAD MATCHES'}</Button>
                 <Button variant='primary' style={{ backgroundColor: 'red', borderColor: 'red' }} onClick={this.logoutUser}>SIGN OUT</Button>
                 <MatchSearchInput matches={matches} onFilteredMatches={this.onFilteredMatches} />
                 {this.renderSort()}
@@ -197,6 +198,12 @@ export default class AppStateManager extends React.PureComponent<{}, {}> {
         if (matches.length < GET_MATCH_AMOUNT) return false
     }
 
+    getAllMatches = () => {
+        return this.getMatches()
+            // .then(() => delay(5000))
+            // .then(() => this.getMatches())
+    }
+
     getMatches = () => {
         let { hasMessages, nextPageToken } = this.state
 
@@ -211,8 +218,9 @@ export default class AppStateManager extends React.PureComponent<{}, {}> {
         is_super_like: false
         is_tinder_u: false
         */
-        ApiHandler.getMatches(hasMessages, nextPageToken)
+        return ApiHandler.getMatches(hasMessages, nextPageToken)
             .then((res) => {
+                debugger
                 if (!res?.data) return Promise.reject(new Error(res))
                 this.setState({ nextPageToken: res?.data?.next_page_token })
                 return Promise.all(res.data.matches.map((match) => this.enhanceMatch(match)))
