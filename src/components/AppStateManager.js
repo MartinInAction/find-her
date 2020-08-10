@@ -220,7 +220,6 @@ export default class AppStateManager extends React.PureComponent<{}, {}> {
         */
         return ApiHandler.getMatches(hasMessages, nextPageToken)
             .then((res) => {
-                debugger
                 if (!res?.data) return Promise.reject(new Error(res))
                 this.setState({ nextPageToken: res?.data?.next_page_token })
                 return Promise.all(res.data.matches.map((match) => this.enhanceMatch(match)))

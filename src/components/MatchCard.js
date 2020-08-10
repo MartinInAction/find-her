@@ -25,7 +25,7 @@ export default class MatchCard extends PureComponent {
     render () {
         let {match} = this.props
         return (
-            <div className={styles.container}>
+            <div className={styles.container} onClick={this.openMatch}>
                 <Swiper
                     pagination
                     spaceBetween={1}
@@ -46,5 +46,9 @@ export default class MatchCard extends PureComponent {
                 </div>
                 </div>
         )
+    }
+
+    openMatch = () => {
+        console.log('hej')
     }
 }
