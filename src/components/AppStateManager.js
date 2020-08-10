@@ -106,7 +106,7 @@ export default class AppStateManager extends React.PureComponent<{}, {}> {
 
     renderMatch = (match: Object, index: number) => {
         if (!match?.person) return <div key={index} />
-        return <MatchCard match={match} />
+        return <MatchCard match={match} key={index} />
     }
 
     renderErrorMessage = (errorMessage?: string) => {
