@@ -8,8 +8,9 @@ import MatchSearchInput from './MatchSearchInput'
 import DispayText from './DisplayText'
 import { calculateAge } from '../libs/Common'
 import * as ApiHandler from '../libs/ApiHandler'
-import { GET_MATCH_AMOUNT, LOCATION, AGE } from '../libs/Consts'
+import { GET_MATCH_AMOUNT, LOCATION, AGE, LAST_ACTIVE_AT } from '../libs/Consts'
 import MatchCard from './MatchCard'
+import moment from 'moment'
 import {delay} from '../libs/Common'
 
 const INITIAL_STATE = {
@@ -54,6 +55,7 @@ export default class AppStateManager extends React.PureComponent<{}, {}> {
         return <DropdownButton id="dropdown-basic-button" title={`Sort: ${this.state.sort}`}>
             <Dropdown.Item onClick={this.setSortingAge}>Age</Dropdown.Item>
             <Dropdown.Item onClick={this.setSortingLocation}>Location</Dropdown.Item>
+            <Dropdown.Item onClick={this.setSortingActiveAt}>Active at</Dropdown.Item>
         </DropdownButton>
     }
 
@@ -134,6 +136,13 @@ export default class AppStateManager extends React.PureComponent<{}, {}> {
                 console.log('SIGN IN ERROR', err)
                 this.setState({ loginError: err, isLoading: false })
             })
+    }
+
+    setSortingActiveAt = () => {
+        let { matches } = this.state
+        matches.sort((a, b) => moment(b.last_activity_date) - moment(a.last_activity_date))
+        this.setState({ sort: LAST_ACTIVE_AT, matches })
+        
     }
 
     setSortingAge = () => {
