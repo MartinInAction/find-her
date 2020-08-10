@@ -205,6 +205,7 @@ export default class AppStateManager extends React.PureComponent<{}, {}> {
         let {matches} = this.state
         if (matches.length === 0) return true
         if (matches.length < GET_MATCH_AMOUNT) return false
+        return true
     }
 
     getAllMatches = () => {
@@ -216,7 +217,7 @@ export default class AppStateManager extends React.PureComponent<{}, {}> {
     getMatches = () => {
         let { hasMessages, nextPageToken } = this.state
         // this code will not allow us to get more than 25 matches?!?!
-        // if (!this.hasMoreMatches()) return null
+        if (!this.hasMoreMatches()) return null
 
         /* filter on 
         is_boost_match: false
