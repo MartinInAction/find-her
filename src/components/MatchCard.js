@@ -21,34 +21,41 @@ SwiperCore.use([Pagination, Virtual]);
      * maybe show on map?
  */
 
-export default class MatchCard extends PureComponent {
+ type Props = {
+     match: Object
+ }
+
+ type State = {}
+export default class MatchCard extends PureComponent<Props, State> {
     render () {
         let {match} = this.props
         return (
-            <div className={styles.container} onClick={this.openMatch}>
-                <Swiper
-                    pagination
-                    spaceBetween={1}
-                    slidesPerView={1}
-                    className={cn(styles.swiper)}
-                >
-                    {match?.person?.photos.map((photo, index) => {
-                        return <SwiperSlide key={index} className={styles.slide}>
-                            <img src={photo?.url} className={cn(styles.image, styles.border)} alt='hot grill' />
-                        </SwiperSlide>
-                    })}
-                </Swiper>
-                <div className={cn(styles.textWrapper)}>
-                <p>{match.person.name}</p>
-                    <p>{Math.floor(match.distance_mi * MILE_CONVERTER_NUMBER)} km</p>
-                    <p>{calculateAge(match.birth_date)} år</p>
-                    {/* <p>{match.bio}</p> */}
+            <>
+                <div className={styles.container} onClick={this.openMatch}>
+                    <Swiper
+                        pagination
+                        spaceBetween={1}
+                        slidesPerView={1}
+                        className={cn(styles.swiper)}
+                    >
+                        {match?.person?.photos.map((photo, index) => {
+                            return <SwiperSlide key={index} className={styles.slide}>
+                                <img src={photo?.url} className={cn(styles.image, styles.border)} alt='hot grill' />
+                            </SwiperSlide>
+                        })}
+                    </Swiper>
+                    <div className={cn(styles.textWrapper)}>
+                    <p>{match.person.name}</p>
+                        <p>{Math.floor(match.distance_mi * MILE_CONVERTER_NUMBER)} km</p>
+                        <p>{calculateAge(match.birth_date)} år</p>
+                        {/* <p>{match.bio}</p> */}
+                    </div>
                 </div>
-                </div>
+            </>
         )
     }
 
     openMatch = () => {
-        console.log('hej')
+        
     }
 }
