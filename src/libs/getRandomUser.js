@@ -1,10 +1,15 @@
 
+import Config from './Config';
 
 export let getRandomUsers = () => {
     return new Promise((resolve, reject) => {
-        /* fetch(`/asset-detail/mosaics/more-like/169963171?&pagesize=200`, {
-            method: 'GET'
-        })*/
+        if (Config.enableSafeMode) return (
+            fetch(`https://randomuser.me/api/?results=150&gender=female&inc=picture`)
+                .then(res => res.json())
+                .then(res => resolve(res.results))
+                .catch(err => reject(err))
+        )
+
         Promise.all([
             getImages(1),
             getImages(2),

@@ -3,6 +3,7 @@ import useWindowDimensions from '../libs/useWindowDimensions'
 import { getRandomUsers } from '../libs/getRandomUser'
 import styles from '../styles/backgroundgrid.module.scss'
 import cn from 'classnames'
+import Config from '../libs/Config';
 
 const ImageGrid = ({images}) => {
 
@@ -17,7 +18,7 @@ const ImageGrid = ({images}) => {
       <div className={styles.backgroundGridContainer}>
         {images.map((item, index) => {
             if (index + 1 > nrImages) return null
-            return <img src={item.image} key={index} className={cn(styles.gridImage, styles.gridImageAnimation)} alt='person' />
+            return <img src={Config.enableSafeMode ? item.picture.large : item.image} key={index} className={cn(styles.gridImage, styles.gridImageAnimation)} alt='person' />
       })}
       </div>
     )
